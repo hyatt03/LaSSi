@@ -33,5 +33,5 @@ class Particles(object):
 
     # Calculate the effective B field for all atoms
     def combine_neighbours(self):
-        for atom in self.atoms:
+        for atom in self:
             atom.combine_neighbours(self.atoms)

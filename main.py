@@ -107,9 +107,21 @@ def handle_constant_properties(options):
 
     return options
 
+def check_filetype(obConversion, filetype):
+    for format in obConversion.GetSupportedInputFormat():
+        if format.startswith(filetype):
+            return True
+
+    return False
+
 def handle_molecule_from_file(options):
+    filetype = options.filename.split('.')[-1]
     obConversion = openbabel.OBConversion()
-    obConversion.SetInAndOutFormats("cml", "mdl")
+
+    if not check_filetype(obConversion, filetype):
+        die('Input filetype not supported, check http://openbabel.org/docs/2.3.0/FileFormats/Overview.html for supported formats')
+
+    obConversion.SetInAndOutFormats(filetype, "pdb")
 
     mol = openbabel.OBMol()
     obConversion.ReadFile(mol, options.filename)
