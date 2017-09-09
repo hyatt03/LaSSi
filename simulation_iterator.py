@@ -31,6 +31,7 @@ import datetime as date
 from RK4 import RK4
 """
 
+timeseries = []
 
 def simulation_iterator(options, particles):
     # Create a suitable filename
@@ -38,9 +39,11 @@ def simulation_iterator(options, particles):
         .format(particles.N_atoms, options.N_simulation, options.dt, options.l, options.T, options.B)
 
     # Begin simulation
-    for i in range(0, 1):#options.N_simulation):
+    for i in range(1, options.N_simulation):
         # ensure the effective B field is correct.
+        print('qqq')
         particles.combine_neighbours()
+        print('qqq2')
 
         var = 2 * options.l * options.k_b * options.T * options.hbar * options.dt / \
               ((options.g * options.mu_b) ** 2 * options.spin)
@@ -53,7 +56,10 @@ def simulation_iterator(options, particles):
         b_rand_vec = b_rand * np.array([math.sin(v) * math.cos(u), math.sin(v) * math.sin(u), math.cos(v)])
 
         for particle in particles:
-            particle.take_RK4_step(b_rand_vec)
+            print(particle)
+            id, pos = particle.take_RK4_step(b_rand_vec)
+            timeseries.append((i * options.dt, id, pos))
+
 
     """
     Creating particles and giving neighbours and IC

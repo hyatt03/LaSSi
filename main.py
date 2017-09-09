@@ -126,6 +126,8 @@ def handle_molecule_from_file(options):
     mol = openbabel.OBMol()
     obConversion.ReadFile(mol, options.filename)
 
+    print('Opened molecule with {} atoms and a total mass of {}'.format(mol.NumAtoms(), mol.GetExactMass()))
+
     return Particles(mol, options)
 
 def main():

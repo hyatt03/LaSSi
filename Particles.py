@@ -9,6 +9,7 @@ class Particles(object):
     def __init__(self, molecule, options):
         self.options = options
         self.atoms = []
+        self.mol = molecule
         self.current = 0
 
         for obatom in OBMolAtomIter(molecule):
@@ -26,6 +27,7 @@ class Particles(object):
 
     def next(self):
         if self.current > self.N_atoms - 1:
+            self.current = 0
             raise StopIteration
         else:
             self.current += 1
@@ -33,5 +35,5 @@ class Particles(object):
 
     # Calculate the effective B field for all atoms
     def combine_neighbours(self):
-        for atom in self:
+        for atom in self.atoms:
             atom.combine_neighbours(self.atoms)

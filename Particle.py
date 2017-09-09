@@ -16,6 +16,9 @@ class Particle(object):
     def current_position(self):
         return np.array([self.atom.GetX(), self.atom.GetY(), self.atom.GetZ()], dtype='float64')
 
+    def set_position(self, p):
+        self.atom.SetVector(p[0], p[1], p[2])
+
     # Calculate the effective B field for this atom from it's neighbours
     def combine_neighbours(self, neighbours):
         self.B_eff = self.options.B
@@ -29,12 +32,32 @@ class Particle(object):
         return (o.gamma * o.spin * np.cross(p, self.B_eff) - o.l * o.gamma * o.spin * (
             p * np.dot(p, self.B_eff) - self.B_eff * np.dot(p, p)))
 
-    def take_RK4_step(self):
+    def take_RK4_step(self, b_rand):
+        # Get the current position from OBAtom
         p = self.current_position()
 
+        # Calculate partial Runge Kutta steps
         k1 = self.calculate_RK4_cartesian(p)
         k2 = self.calculate_RK4_cartesian(p + k1 * self.options.dt / 2)
         k3 = self.calculate_RK4_cartesian(p + k2 * self.options.dt / 2)
         k4 = self.calculate_RK4_cartesian(p + k3 * self.options.dt)
 
-        return (k1 + 2 * k2 + 2 * k3 + k4) * self.options.dt / 6
+        # Calculate the total difference in the spin
+        d_spin = (k1 + 2 * k2 + 2 * k3 + k4) * self.options.dt / 6
+
+        # Calculate the random energy added
+        d_spin_rand = self.options.gamma * self.options.spin * np.cross(p, b_rand)
+
+        #print(d_spin, d_spin_rand)
+
+        # Calculate new position and normalise the vector
+        p = p + d_spin + d_spin_rand
+
+        print(p)
+
+        #p = p / np.linalg.norm(p)
+
+        # Save the data to the atom
+        self.set_position(p)
+
+        return (self.id, p)
