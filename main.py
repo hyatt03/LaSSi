@@ -5,9 +5,12 @@ import sys
 import os
 import openbabel
 import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 from optparse import OptionParser
-from simulation_iterator import simulation_iterator
 from Particles import Particles
+from simulation_iterator import simulation_iterator
+from annealing import anneal_particles
 
 def die(message = ''):
     print('An error occurred')
@@ -30,6 +33,7 @@ def handle_arguments():
     parser.add_option("-T", "--temperature", dest="T", help="Set the temperature", metavar="TEMP")
     parser.add_option("-B", "--magneticfield", dest="B", help="Set the external B field, comma delimited (-B x,y,z)", metavar="MAGN")
     parser.add_option("-N", "--iterations", dest="N_simulation", help="Set the amount of iterations", metavar="ITER")
+    parser.add_option("-A", "--anneal", dest="anneal", help="Enable annealing in N steps", metavar="A")
     parser.add_option("--dt", dest="dt", help="Set the dt", metavar="DT")
 
     (options, args) = parser.parse_args()
@@ -84,6 +88,9 @@ def handle_arguments():
     else:
         die('You must set the dt (for example 4.14e-15)!')
 
+    if options.anneal:
+        options.anneal = int(float(options.anneal))
+
     return options
 
 def handle_constant_properties(options):
@@ -136,7 +143,27 @@ def main():
 
     particles = handle_molecule_from_file(options)
 
+    if options.anneal:
+        particles = anneal_particles(options, particles)
+
     results = simulation_iterator(options, particles)
+
+    print('Done simulating, plotting results')
+
+    xs = []
+    ys = []
+    zs = []
+
+    for t, id, pos in results:
+        xs.append(pos[0])
+        ys.append(pos[1])
+        zs.append(pos[2])
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.scatter(xs, ys, zs)
+
+    plt.show()
 
     return results
 

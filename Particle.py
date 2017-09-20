@@ -3,18 +3,25 @@ Class Particle wraps a OBAtom with a few extra goodies. Cleaner than extending s
 """
 
 import numpy as np
-
+import math
 
 class Particle(object):
     def __init__(self, id, obatom, N, options):
         self.id = id
         self.atom = obatom
         self.N = N
-        self.B_eff = np.array([0.0, 0.0, 0.0], dtype='float64')
+        self.B_eff = np.array([0.0, 0.0, 0.0], dtype='float')
         self.options = options
 
+        x, y, z = self.atom.GetX(), self.atom.GetY(), self.atom.GetZ()
+
+        # Setup
+        self.r = math.sqrt(x ** 2 + y ** 2 + z ** 2)
+        self.theta = math.atan2(math.sqrt(x ** 2 + y ** 2), z)
+        self.phi = math.atan2(y, x)
+
     def current_position(self):
-        return np.array([self.atom.GetX(), self.atom.GetY(), self.atom.GetZ()], dtype='float64')
+        return np.array([self.atom.GetX(), self.atom.GetY(), self.atom.GetZ()], dtype='float')
 
     def set_position(self, p):
         self.atom.SetVector(p[0], p[1], p[2])
@@ -48,14 +55,9 @@ class Particle(object):
         # Calculate the random energy added
         d_spin_rand = self.options.gamma * self.options.spin * np.cross(p, b_rand)
 
-        #print(d_spin, d_spin_rand)
-
         # Calculate new position and normalise the vector
         p = p + d_spin + d_spin_rand
-
-        print(p)
-
-        #p = p / np.linalg.norm(p)
+        p = p / np.linalg.norm(p)
 
         # Save the data to the atom
         self.set_position(p)

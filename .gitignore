@@ -1,0 +1,8 @@
+run_*.sh
+test_files
+openbabel
+eigen2
+build
+data
+*.pyc
+.idea
