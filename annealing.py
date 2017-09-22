@@ -3,7 +3,6 @@ import math
 import numpy as np
 
 def anneal_particles(options, particles):
-    print('Annealing')
     T_stair_steps = np.linspace(options.T, options.T * 10, num=options.anneal)[::-1]
 
     for T in T_stair_steps:

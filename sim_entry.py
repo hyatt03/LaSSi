@@ -34,6 +34,7 @@ def handle_arguments():
     parser.add_option("-B", "--magneticfield", dest="B", help="Set the external B field, comma delimited (-B x,y,z)", metavar="MAGN")
     parser.add_option("-N", "--iterations", dest="N_simulation", help="Set the amount of iterations", metavar="ITER")
     parser.add_option("-A", "--anneal", dest="anneal", help="Enable annealing in N steps", metavar="A")
+    parser.add_option("-p", "--plot", dest="should_plot", help="Do you want to plot the positions?", metavar="P")
     parser.add_option("--dt", dest="dt", help="Set the dt", metavar="DT")
 
     (options, args) = parser.parse_args()
@@ -138,32 +139,39 @@ def handle_molecule_from_file(options):
     return Particles(mol, options)
 
 def main():
-    options = handle_arguments()
-    options = handle_constant_properties(options)
+    o = handle_arguments() # Getting options
+    o = handle_constant_properties(o)
 
-    particles = handle_molecule_from_file(options)
+    print('Opening molecule')
+    particles = handle_molecule_from_file(o)
 
-    if options.anneal:
-        particles = anneal_particles(options, particles)
+    # Create a suitable filename
+    cleaned_filename = o.filename.split('/')[-1].split('.')[0]
+    filename = '{}/{}_N={}_dt={}_l={}_T={}_B={}_{}_{}_Particle.h5' \
+        .format(o.data_dir, cleaned_filename, o.N_simulation, o.dt, o.l, o.T, o.B[0], o.B[1], o.B[2])
 
-    results = simulation_iterator(options, particles)
+    if o.anneal:
+        print('Annealing')
+        particles = anneal_particles(o, particles)
 
-    print('Done simulating, plotting results')
+    print('Starting simulation')
+    results = simulation_iterator(o, particles)
 
-    xs = []
-    ys = []
-    zs = []
+    print ('Done simulating, saving results')
+    results.to_hdf(filename, 'df')
 
-    for t, id, pos in results:
-        xs.append(pos[0])
-        ys.append(pos[1])
-        zs.append(pos[2])
+    print('Saved to {}'.format(filename))
+    if o.should_plot:
+        print('Plotting results')
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        ax.plot(results['pos_x'], results['pos_y'], results['pos_z'])
 
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    ax.scatter(xs, ys, zs)
+        plt.xlim(-1, 1)
+        plt.ylim(-1, 1)
+        #plt.zlim(-1, 1)
 
-    plt.show()
+        plt.show()
 
     return results
 

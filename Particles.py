@@ -12,6 +12,7 @@ class Particles(object):
         self.mol = molecule
         self.current = 0
 
+        # TODO: We only want magnetic moelcules
         for obatom in OBMolAtomIter(molecule):
             self.atoms.append((len(self.atoms), obatom))
 

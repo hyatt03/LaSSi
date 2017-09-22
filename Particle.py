@@ -30,7 +30,8 @@ class Particle(object):
     def combine_neighbours(self, neighbours):
         self.B_eff = self.options.B
         for item in neighbours:
-            self.B_eff += -2 * self.options.J * self.options.spin * item.current_position() / \
+            if item.id != self.id:
+                self.B_eff += -2 * self.options.J * self.options.spin * item.current_position() / \
                           (self.options.g * self.options.mu_b)
 
     def calculate_RK4_cartesian(self, p):
