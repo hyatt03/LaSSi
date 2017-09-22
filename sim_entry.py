@@ -142,7 +142,6 @@ def main():
     o = handle_arguments() # Getting options
     o = handle_constant_properties(o)
 
-
     print('Opening molecule')
     particles = handle_molecule_from_file(o)
 
