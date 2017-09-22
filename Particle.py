@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Class Particle wraps a OBAtom with a few extra goodies. Cleaner than extending swig++ classes.
 """
@@ -6,12 +7,13 @@ import numpy as np
 import math
 
 class Particle(object):
-    def __init__(self, id, obatom, N, options):
+    def __init__(self, id, obatom, N, neighbours, options):
         self.id = id
         self.atom = obatom
         self.N = N
         self.B_eff = np.array([0.0, 0.0, 0.0], dtype='float')
         self.options = options
+        self.neighbours = neighbours
 
         x, y, z = self.atom.GetX(), self.atom.GetY(), self.atom.GetZ()
 
@@ -20,6 +22,10 @@ class Particle(object):
         self.theta = math.atan2(math.sqrt(x ** 2 + y ** 2), z)
         self.phi = math.atan2(y, x)
 
+    def get_obatom(self):
+        return self.atom
+
+    # Skal være spin position, ikke lattice position. J tager højde for interaktioner.
     def current_position(self):
         return np.array([self.atom.GetX(), self.atom.GetY(), self.atom.GetZ()], dtype='float')
 
@@ -28,12 +34,14 @@ class Particle(object):
 
     # Calculate the effective B field for this atom from it's neighbours
     def combine_neighbours(self, neighbours):
-        self.B_eff = self.options.B
-        for item in neighbours:
-            if item.id != self.id:
-                self.B_eff += -2 * self.options.J * self.options.spin * item.current_position() / \
+        # Kun nærmeste! Interaktionen til genbo vil være meget lavere og dermed approximeret væk
+        self.B_eff = np.copy(self.options.B)
+        for item in self.neighbours:
+            if item != self.id:
+                self.B_eff += -2 * self.options.J * self.options.spin * neighbours[item].current_position() / \
                           (self.options.g * self.options.mu_b)
 
+    # Actually calculate the step.
     def calculate_RK4_cartesian(self, p):
         o = self.options
 

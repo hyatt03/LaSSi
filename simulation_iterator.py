@@ -9,6 +9,9 @@ import sys
 timeseries = []
 
 def simulation_iterator(options, particles):
+    sigma = math.sqrt(2 * options.l * options.k_b * options.T * options.hbar * options.dt / \
+          ((options.g * options.mu_b) ** 2 * options.spin))
+
     # Begin simulation
     perc = 0
     for i in range(1, options.N_simulation):
@@ -20,17 +23,12 @@ def simulation_iterator(options, particles):
         # ensure the effective B field is correct.
         particles.combine_neighbours()
 
-        var = 2 * options.l * options.k_b * options.T * options.hbar * options.dt / \
-              ((options.g * options.mu_b) ** 2 * options.spin)
-
-        # Spørgsmål til Tang: Skal der tilfældighed for hver iteration, eller hver partikel ved hver iteration?
-        # Lille pertubation til B feltet (der kommer noget energi i systemet)
-        b_rand = random.gauss(0, (var) ** (1 / 2)) * options.dt
+        b_rand = random.gauss(0, sigma)
         u = random.random() * 2 * math.pi
         v = math.acos(2 * random.random() - 1)
         b_rand_vec = b_rand * np.array([math.sin(v) * math.cos(u), math.sin(v) * math.sin(u), math.cos(v)])
 
-        for particle in particles:
+        for particle in particles.atoms:
             id, pos = particle.take_RK4_step(b_rand_vec)
             timeseries.append((i * options.dt, id, pos[0], pos[1], pos[2]))
 

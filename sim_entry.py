@@ -32,6 +32,7 @@ def handle_arguments():
     parser.add_option("-l", "--dampening", dest="l", help="(OPTIONAL) Set the dampening factor", metavar="DAMP")
     parser.add_option("-T", "--temperature", dest="T", help="Set the temperature", metavar="TEMP")
     parser.add_option("-B", "--magneticfield", dest="B", help="Set the external B field, comma delimited (-B x,y,z)", metavar="MAGN")
+    parser.add_option("-J", "--NNIC", dest="J", help="Set the nearest neighbour interaction constant", metavar="NNIC")
     parser.add_option("-N", "--iterations", dest="N_simulation", help="Set the amount of iterations", metavar="ITER")
     parser.add_option("-A", "--anneal", dest="anneal", help="Enable annealing in N steps", metavar="A")
     parser.add_option("-p", "--plot", dest="should_plot", help="Do you want to plot the positions?", metavar="P")
@@ -61,6 +62,11 @@ def handle_arguments():
         options.T = float(options.T)
     else:
         die('You must set the temperature!')
+
+    if options.J:
+        options.J = float(options.J)
+    else:
+        die('You must the the nearest neighbour inteaction constant (J)')
 
     if options.B and ',' in options.B:
         B = options.B.split(',')
@@ -110,7 +116,6 @@ def handle_constant_properties(options):
     options.g = -2.002
     options.mu_b = 9.274009994e-24
     options.hbar = 1.054571800e-34
-    options.J = -0.142 * options.k_b
     options.gamma = options.g * options.mu_b / options.hbar
 
     return options
@@ -140,7 +145,7 @@ def handle_molecule_from_file(options):
 
 def main():
     o = handle_arguments() # Getting options
-    o = handle_constant_properties(o)
+    o = handle_constant_properties(o) # Append constants
 
     print('Opening molecule')
     particles = handle_molecule_from_file(o)
@@ -150,16 +155,20 @@ def main():
     filename = '{}/{}_N={}_dt={}_l={}_T={}_B={}_{}_{}_Particle.h5' \
         .format(o.data_dir, cleaned_filename, o.N_simulation, o.dt, o.l, o.T, o.B[0], o.B[1], o.B[2])
 
+    # Simulated annealing attempts to find a ground state for the system by gradually lowering the temperature.
     if o.anneal:
         print('Annealing')
         particles = anneal_particles(o, particles)
 
+    # Begin the main simulation phase
     print('Starting simulation')
     results = simulation_iterator(o, particles)
 
+    # Save the raw results
     print ('Done simulating, saving results')
     results.to_hdf(filename, 'df')
 
+    # Plot if needed.
     print('Saved to {}'.format(filename))
     if o.should_plot:
         print('Plotting results')
@@ -167,8 +176,8 @@ def main():
         ax = fig.add_subplot(111, projection='3d')
         ax.plot(results['pos_x'], results['pos_y'], results['pos_z'])
 
-        plt.xlim(-1, 1)
-        plt.ylim(-1, 1)
+        #plt.xlim(-1, 1)
+        #plt.ylim(-1, 1)
         #plt.zlim(-1, 1)
 
         plt.show()
