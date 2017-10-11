@@ -26,6 +26,7 @@ class Particles(object):
         self.N_atoms = len(atoms)
 
         # Compute distances
+        # Der er periodiske randbetingelser (Den helt til højre, er nabo til den helt til venstre).
         for id, atom in atoms:
             distances = []
             for inner_id, inner_atom in atoms:

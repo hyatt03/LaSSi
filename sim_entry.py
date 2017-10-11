@@ -32,7 +32,7 @@ def handle_arguments():
     parser.add_option("-l", "--dampening", dest="l", help="(OPTIONAL) Set the dampening factor", metavar="DAMP")
     parser.add_option("-T", "--temperature", dest="T", help="Set the temperature", metavar="TEMP")
     parser.add_option("-B", "--magneticfield", dest="B", help="Set the external B field, comma delimited (-B x,y,z)", metavar="MAGN")
-    parser.add_option("-J", "--NNIC", dest="J", help="Set the nearest neighbour interaction constant", metavar="NNIC")
+    parser.add_option("-J", "--NNIC", dest="J", help="Set the nearest neighbour interaction constant", metavar="NNIC") # I enheder af kelvin.
     parser.add_option("-N", "--iterations", dest="N_simulation", help="Set the amount of iterations", metavar="ITER")
     parser.add_option("-A", "--anneal", dest="anneal", help="Enable annealing in N steps", metavar="A")
     parser.add_option("-p", "--plot", dest="should_plot", help="Do you want to plot the positions?", metavar="P")

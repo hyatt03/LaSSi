@@ -5,6 +5,7 @@ Class Particle wraps a OBAtom with a few extra goodies. Cleaner than extending s
 
 import numpy as np
 import math
+from utils import cross
 
 class Particle(object):
     def __init__(self, id, obatom, N, neighbours, options):
@@ -45,7 +46,7 @@ class Particle(object):
     def calculate_RK4_cartesian(self, p):
         o = self.options
 
-        return (o.gamma * o.spin * np.cross(p, self.B_eff) - o.l * o.gamma * o.spin * (
+        return (o.gamma * o.spin * cross(p, self.B_eff) - o.l * o.gamma * o.spin * (
             p * np.dot(p, self.B_eff) - self.B_eff * np.dot(p, p)))
 
     def take_RK4_step(self, b_rand):
@@ -62,7 +63,7 @@ class Particle(object):
         d_spin = (k1 + 2 * k2 + 2 * k3 + k4) * self.options.dt / 6
 
         # Calculate the random energy added
-        d_spin_rand = self.options.gamma * self.options.spin * np.cross(p, b_rand)
+        d_spin_rand = self.options.gamma * self.options.spin * cross(p, b_rand)
 
         # Calculate new position and normalise the vector
         p = p + d_spin + d_spin_rand
@@ -72,3 +73,5 @@ class Particle(object):
         self.set_position(p)
 
         return (self.id, p)
+
+    # TODO: Calculate energy (Sum over spins dotted on nearest neighbours, times J).
