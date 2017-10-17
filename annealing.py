@@ -3,6 +3,31 @@
 import random
 import math
 import numpy as np
+from multiprocessing import Pool
+
+def run_anneal(arg):
+    return anneal_particles(arg[0], arg[1])
+
+def parrallel_anneal(options, particles, sets):
+    particle_sets = []
+    for i in range(0, sets):
+        particle_sets.append((options, particles))
+
+    pool = Pool()
+    mapping_result = pool.map(run_anneal, particle_sets)
+    pool.close()
+    pool.join()
+
+    lowest_energy = None
+    best_set = None
+    for particle_set in mapping_result:
+        e = particle_set.get_energy()
+
+        if not lowest_energy or e < lowest_energy:
+            lowest_energy = e
+            best_set = particle_set
+
+    return best_set
 
 def anneal_particles(options, particles):
     T_stair_steps = np.linspace(options.T, options.T * 10, num=options.anneal)[::-1]

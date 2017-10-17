@@ -5,33 +5,30 @@ Class Particle wraps a OBAtom with a few extra goodies. Cleaner than extending s
 
 import numpy as np
 import math
-from utils import cross
+from utils import cross, dot
 
 class Particle(object):
     def __init__(self, id, obatom, N, neighbours, options):
         self.id = id
-        self.atom = obatom
         self.N = N
         self.B_eff = np.array([0.0, 0.0, 0.0], dtype='float')
         self.options = options
         self.neighbours = neighbours
+        self.pos = np.array([obatom.GetX(), obatom.GetY(), obatom.GetZ()], dtype='float')
 
-        x, y, z = self.atom.GetX(), self.atom.GetY(), self.atom.GetZ()
+        x, y, z = self.pos[0], self.pos[1], self.pos[2]
 
         # Setup
         self.r = math.sqrt(x ** 2 + y ** 2 + z ** 2)
         self.theta = math.atan2(math.sqrt(x ** 2 + y ** 2), z)
         self.phi = math.atan2(y, x)
 
-    def get_obatom(self):
-        return self.atom
-
     # Skal være spin position, ikke lattice position. J tager højde for interaktioner.
     def current_position(self):
-        return np.array([self.atom.GetX(), self.atom.GetY(), self.atom.GetZ()], dtype='float')
+        return self.pos.copy()
 
     def set_position(self, p):
-        self.atom.SetVector(p[0], p[1], p[2])
+        self.pos = p
 
     # Calculate the effective B field for this atom from it's neighbours
     def combine_neighbours(self, neighbours):
@@ -47,10 +44,10 @@ class Particle(object):
         o = self.options
 
         return (o.gamma * o.spin * cross(p, self.B_eff) - o.l * o.gamma * o.spin * (
-            p * np.dot(p, self.B_eff) - self.B_eff * np.dot(p, p)))
+            p * dot(p, self.B_eff) - self.B_eff * dot(p, p)))
 
     def take_RK4_step(self, b_rand):
-        # Get the current position from OBAtom
+        # Get the current position
         p = self.current_position()
 
         # Calculate partial Runge Kutta steps
@@ -67,11 +64,19 @@ class Particle(object):
 
         # Calculate new position and normalise the vector
         p = p + d_spin + d_spin_rand
-        p = p / np.linalg.norm(p)
+        p = p / math.sqrt(dot(p, p))
 
         # Save the data to the atom
         self.set_position(p)
 
         return (self.id, p)
 
-    # TODO: Calculate energy (Sum over spins dotted on nearest neighbours, times J).
+    # Calculate energy (Sum over spins dotted on nearest neighbours, times J).
+    def get_energy(self, neighbours):
+        energy = 0
+        for item in self.neighbours:
+            # -1 måske?
+            # Hamiltonian
+            energy += -1 * self.options.J * dot(neighbours[item].current_position(), self.current_position())
+
+        return energy

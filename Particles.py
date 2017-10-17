@@ -13,7 +13,6 @@ class Particles(object):
     def __init__(self, molecule, options):
         self.options = options
         self.atoms = []
-        self.mol = molecule
         self.current = 0
 
         atoms = []
@@ -66,3 +65,10 @@ class Particles(object):
     def combine_neighbours(self):
         for atom in self.atoms:
             atom.combine_neighbours(self.atoms)
+
+    def get_energy(self):
+        energy = 0
+        for atom in self.atoms:
+            energy += atom.get_energy(self.atoms)
+
+        return energy

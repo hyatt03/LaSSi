@@ -10,7 +10,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from optparse import OptionParser
 from Particles import Particles
 from simulation_iterator import simulation_iterator
-from annealing import anneal_particles
+from annealing import parrallel_anneal
 
 def die(message = ''):
     print('An error occurred')
@@ -158,7 +158,7 @@ def main():
     # Simulated annealing attempts to find a ground state for the system by gradually lowering the temperature.
     if o.anneal:
         print('Annealing')
-        particles = anneal_particles(o, particles)
+        particles = parrallel_anneal(o, particles, 8)
 
     # Begin the main simulation phase
     print('Starting simulation')
@@ -181,6 +181,9 @@ def main():
         #plt.zlim(-1, 1)
 
         plt.show()
+
+    if True: # If fourier transform is enabled
+        pass
 
     return results
 

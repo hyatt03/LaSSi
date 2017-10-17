@@ -30,7 +30,7 @@ def simulation_iterator(options, particles):
 
         for particle in particles.atoms:
             id, pos = particle.take_RK4_step(b_rand_vec)
-            timeseries.append((i * options.dt, id, pos[0], pos[1], pos[2]))
+            energy = particle.get_energy(particles.atoms)
+            timeseries.append((i * options.dt, id, pos[0], pos[1], pos[2], energy))
 
-    return pd.DataFrame(timeseries, columns=('t', 'id', 'pos_x', 'pos_y', 'pos_z'))
-
+    return pd.DataFrame(timeseries, columns=('t', 'id', 'pos_x', 'pos_y', 'pos_z', 'energy'))
