@@ -14,7 +14,7 @@ def simulation_iterator(options, particles):
 
     # Begin simulation
     perc = 0
-    for i in range(1, options.N_simulation):
+    for i in range(1, options.N_simulation + 1):
         if (100 * i) / options.N_simulation > perc:
             perc = (100 * i) / options.N_simulation
             print 'Simulating {0}%\r'.format(perc),

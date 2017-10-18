@@ -5,12 +5,14 @@ import sys
 import os
 import openbabel
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from optparse import OptionParser
 from Particles import Particles
 from simulation_iterator import simulation_iterator
 from annealing import parrallel_anneal
+from fourier import fourier, plot_fourier
 
 def die(message = ''):
     print('An error occurred')
@@ -36,12 +38,14 @@ def handle_arguments():
     parser.add_option("-N", "--iterations", dest="N_simulation", help="Set the amount of iterations", metavar="ITER")
     parser.add_option("-A", "--anneal", dest="anneal", help="Enable annealing in N steps", metavar="A")
     parser.add_option("-p", "--plot", dest="should_plot", help="Do you want to plot the positions?", metavar="P")
+    parser.add_option("-F", "--fourier", dest="fourier", help="Should we fourier transform", metavar="F")
+    parser.add_option("-D", "--datafile", dest="datafile", help="Use existing datafile (set path to data)", metavar="D")
     parser.add_option("--dt", dest="dt", help="Set the dt", metavar="DT")
 
     (options, args) = parser.parse_args()
 
-    if not options.filename:
-        die('An inputfile is required!')
+    if not options.filename and not options.datafile:
+        die('An inputfile or datafile is required!')
 
     denominator = 1
     if options.spin:
@@ -86,7 +90,7 @@ def handle_arguments():
         options.B = np.array([0, 0, 0])
 
     if options.N_simulation:
-        options.N_simulation = int(options.N_simulation)
+        options.N_simulation = (2 ** (int(options.N_simulation) - 1)).bit_length()
     else:
         die('You must set the iterations (N_simulation)!')
 
@@ -116,6 +120,7 @@ def handle_constant_properties(options):
     options.g = -2.002
     options.mu_b = 9.274009994e-24
     options.hbar = 1.054571800e-34
+    options.GHz_to_meV = 0.004135665538536
     options.gamma = options.g * options.mu_b / options.hbar
 
     return options
@@ -160,16 +165,29 @@ def main():
         print('Annealing')
         particles = parrallel_anneal(o, particles, 8)
 
-    # Begin the main simulation phase
-    print('Starting simulation')
-    results = simulation_iterator(o, particles)
+    if o.datafile:
+        print('Loading datafile')
+        results = pd.read_hdf(o.datafile)
+    else:
+        # Begin the main simulation phase
+        print('Starting simulation')
+        results = simulation_iterator(o, particles)
 
-    # Save the raw results
-    print ('Done simulating, saving results')
-    results.to_hdf(filename, 'df')
+        # Save the raw results
+        print ('Done simulating')
+        results.to_hdf(filename, 'df')
+
+        print('Saved to {}'.format(filename))
+
+    # Runs a fourier transform
+    if o.fourier:
+        total_fourier, f, energy = fourier(o, results)
+
+        # Plot the transformed variables
+        if o.should_plot:
+            plot_fourier(total_fourier, f, energy)
 
     # Plot if needed.
-    print('Saved to {}'.format(filename))
     if o.should_plot:
         print('Plotting results')
         fig = plt.figure()
@@ -181,9 +199,6 @@ def main():
         #plt.zlim(-1, 1)
 
         plt.show()
-
-    if True: # If fourier transform is enabled
-        pass
 
     return results
 
