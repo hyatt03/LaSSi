@@ -5,9 +5,10 @@ Class that contains all the particles in the simulation.
 """
 
 from Particle import Particle
-from openbabel import OBMolAtomIter
+import openbabel
 import pandas as pd
 import math
+from cli_helper import die
 
 class Particles(object):
     def __init__(self, molecule, options):
@@ -17,7 +18,7 @@ class Particles(object):
 
         atoms = []
 
-        for obatom in OBMolAtomIter(molecule):
+        for obatom in openbabel.OBMolAtomIter(molecule):
             # TODO: We only want magnetic moelcules, but more than just gd
             if obatom.GetType() == 'Gd':
                 atoms.append((len(atoms), obatom))
@@ -72,3 +73,26 @@ class Particles(object):
             energy += atom.get_energy(self.atoms)
 
         return energy
+
+def check_filetype(obConversion, filetype):
+    for format in obConversion.GetSupportedInputFormat():
+        if format.startswith(filetype):
+            return True
+
+    return False
+
+def handle_molecule_from_file(options):
+    filetype = options.filename.split('.')[-1]
+    obConversion = openbabel.OBConversion()
+
+    if not check_filetype(obConversion, filetype):
+        die('Input filetype not supported, check http://openbabel.org/docs/2.3.0/FileFormats/Overview.html for supported formats')
+
+    obConversion.SetInAndOutFormats(str(filetype), "pdb")
+
+    mol = openbabel.OBMol()
+    obConversion.ReadFile(mol, str(options.filename))
+
+    print('Opened molecule with {} atoms and a total mass of {}'.format(mol.NumAtoms(), mol.GetExactMass()))
+
+    return Particles(mol, options)

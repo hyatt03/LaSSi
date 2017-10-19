@@ -5,6 +5,10 @@ import numpy as np
 import pandas as pd
 import random
 import sys
+from utils import downsample
+
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
 timeseries = []
 
@@ -34,3 +38,16 @@ def simulation_iterator(options, particles):
             timeseries.append((i * options.dt, id, pos[0], pos[1], pos[2], energy))
 
     return pd.DataFrame(timeseries, columns=('t', 'id', 'pos_x', 'pos_y', 'pos_z', 'energy'))
+
+def plot_spins(results, filename):
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    #ax.plot(downsample(results['pos_x'], 1000), downsample(results['pos_y'], 1000), downsample(results['pos_z'], 1000))
+    ax.plot(results['pos_x'], results['pos_y'], results['pos_z'])
+
+    # plt.xlim(-1, 1)
+    # plt.ylim(-1, 1)
+    # plt.zlim(-1, 1)
+
+    print('Saving spins plot')
+    plt.savefig(filename, bbox_inches = 'tight')

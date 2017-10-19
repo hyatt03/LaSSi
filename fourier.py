@@ -10,7 +10,7 @@ def fourier(options, timeseries):
     Y = sci.fftn([timeseries.pos_x, timeseries.pos_y, timeseries.pos_z])
 
     x_f, y_f, z_f = Y[0], Y[1], Y[2]
-    total_fourier = [(x + y + z) / 3 for x, y, z, in zip(x_f, y_f, z_f)]
+    total_fourier = [(x + y + z) / 9 for x, y, z, in zip(x_f, y_f, z_f)]
 
     the_list_1 = linspace(0, int((L / 2 - 1)), int(L / 2))
     the_list_2 = [x / L for x in the_list_1]
@@ -21,4 +21,5 @@ def fourier(options, timeseries):
     return total_fourier, f, energy
 
 def plot_fourier(total_fourier, f, energy):
+
     pass
