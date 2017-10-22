@@ -77,8 +77,7 @@ class Particle(object):
     def get_energy(self, neighbours):
         energy = 0
         for item in self.neighbours:
-            # -1 måske?
             # Hamiltonian
-            energy += -1 * self.options.J * dot(neighbours[item].current_position(), self.current_position())
+            energy += -2 * self.options.J * dot(neighbours[item].current_position(), self.current_position())
 
         return energy
