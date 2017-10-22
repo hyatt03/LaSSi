@@ -59,7 +59,7 @@ def main():
     # Plot if needed.
     if o.should_plot:
         print('Plotting spins')
-        plot_spins(results, '{}/spin_plot.png'.format(data_dir))
+        plot_spins(results, '{}/spin_plot'.format(data_dir))
 
     # Runs a fourier transform
     if o.fourier:

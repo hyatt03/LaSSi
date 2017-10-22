@@ -5,6 +5,8 @@ import sys
 import hashlib
 import numpy as np
 import json
+import math
+from utils import dot
 from optparse import OptionParser
 
 def die(message = ''):
@@ -99,6 +101,13 @@ def handle_arguments():
         if B[2]:
             options.B[2] = float(B[2])
 
+        # Calculate the spherical version of the external B field.
+        options.spherical_B = np.array([
+            math.sqrt(dot(options.B, options.B)),  # r
+            math.atan2(math.sqrt(options.B[0] ** 2.0 + options.B[1] ** 2.0), options.B[2]),  # theta
+            math.atan2(options.B[1], options.B[0])  # phi
+        ])
+
     else:
         print('No external B field applied')
         options.B = np.array([0, 0, 0])
@@ -135,7 +144,7 @@ def handle_constant_properties(options):
     options.mu_b = 9.274009994e-24
     options.hbar = 1.054571800e-34
     options.GHz_to_meV = 0.004135665538536
-    options.gamma = options.g * options.mu_b / options.hbar
+    options.gamma = (options.g * options.mu_b) / options.hbar
 
     return options
 

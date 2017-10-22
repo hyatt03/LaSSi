@@ -7,6 +7,7 @@ import numpy as np
 import math
 from utils import cross, dot
 
+
 class Particle(object):
     def __init__(self, id, obatom, N, neighbours, options):
         self.id = id
@@ -15,11 +16,12 @@ class Particle(object):
         self.options = options
         self.neighbours = neighbours
         self.pos = np.array([obatom.GetX(), obatom.GetY(), obatom.GetZ()], dtype='float')
+        self.pos = self.pos / math.sqrt(dot(self.pos, self.pos))
 
         x, y, z = self.pos[0], self.pos[1], self.pos[2]
 
-        # Setup
-        self.r = math.sqrt(x ** 2 + y ** 2 + z ** 2)
+        # Setup spherical
+        self.r = 1 # We simulate the spin unit vector.
         self.theta = math.atan2(math.sqrt(x ** 2 + y ** 2), z)
         self.phi = math.atan2(y, x)
 
@@ -43,8 +45,7 @@ class Particle(object):
     def calculate_RK4_cartesian(self, p):
         o = self.options
 
-        return (o.gamma * o.spin * cross(p, self.B_eff) - o.l * o.gamma * o.spin * (
-            p * dot(p, self.B_eff) - self.B_eff * dot(p, p)))
+        return o.gamma * o.spin * (cross(p, self.B_eff) + o.l * (self.B_eff * dot(p, p) - p * dot(p, self.B_eff)))
 
     def take_RK4_step(self, b_rand):
         # Get the current position
@@ -60,6 +61,7 @@ class Particle(object):
         d_spin = (k1 + 2 * k2 + 2 * k3 + k4) * self.options.dt / 6
 
         # Calculate the random energy added
+        # This is based on temperature
         d_spin_rand = self.options.gamma * self.options.spin * cross(p, b_rand)
 
         # Calculate new position and normalise the vector

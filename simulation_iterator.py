@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 import random
 import sys
-from utils import downsample
 
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
@@ -40,14 +39,36 @@ def simulation_iterator(options, particles):
     return pd.DataFrame(timeseries, columns=('t', 'id', 'pos_x', 'pos_y', 'pos_z', 'energy'))
 
 def plot_spins(results, filename):
+    print('Saving spins plot')
+
+    # 3d plot
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
-    #ax.plot(downsample(results['pos_x'], 1000), downsample(results['pos_y'], 1000), downsample(results['pos_z'], 1000))
     ax.plot(results['pos_x'], results['pos_y'], results['pos_z'])
 
-    # plt.xlim(-1, 1)
-    # plt.ylim(-1, 1)
-    # plt.zlim(-1, 1)
+    ax.set_xlim3d(-1, 1)
+    ax.set_ylim3d(-1, 1)
+    ax.set_zlim3d(-1, 1)
 
-    print('Saving spins plot')
-    plt.savefig(filename, bbox_inches = 'tight')
+    ax.set_xlabel('$S_x$')
+    ax.set_ylabel('$S_y$')
+    ax.set_zlabel('$S_z$')
+
+    plt.axis('equal')
+    plt.title('3d projektion af spin af enkelt Gd ion')
+
+    plt.savefig('{}_3d.png'.format(filename), bbox_inches = 'tight', dpi=300)
+
+    # xy projection
+    fig, ax = plt.subplots()
+    ax.plot(results['pos_x'], results['pos_y'])
+
+    plt.xlim(-1.1, 1.1)
+    plt.ylim(-1.1, 1.1)
+    plt.xlabel('$S_x$')
+    plt.ylabel('$S_y$')
+
+    plt.axis('equal')
+    plt.title('Projektion af xy planet for spin af enkelt Gd ion')
+
+    plt.savefig('{}_xy.png'.format(filename), bbox_inches='tight', dpi=300)
