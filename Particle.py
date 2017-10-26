@@ -15,8 +15,8 @@ class Particle(object):
         self.B_eff = np.array([0.0, 0.0, 0.0], dtype='float')
         self.options = options
         self.neighbours = neighbours
-        self.pos = np.array([obatom.GetX(), obatom.GetY(), obatom.GetZ()], dtype='float')
-        self.pos = self.pos / math.sqrt(dot(self.pos, self.pos))
+        self.lattice_position = np.array([obatom.GetX(), obatom.GetY(), obatom.GetZ()], dtype='float')
+        self.pos = self.lattice_position / math.sqrt(dot(self.lattice_position, self.lattice_position))
 
         x, y, z = self.pos[0], self.pos[1], self.pos[2]
 
@@ -73,11 +73,12 @@ class Particle(object):
 
         return (self.id, p)
 
-    # Calculate energy (Sum over spins dotted on nearest neighbours, times J).
+    # Calculate energy using hamiltonian
     def get_energy(self, neighbours):
         energy = 0
         for item in self.neighbours:
-            # Hamiltonian
-            energy += -2 * self.options.J * dot(neighbours[item].current_position(), self.current_position())
+            if item != self.id:
+                # Hamiltonian
+                energy += -2 * self.options.J * dot(neighbours[item].current_position(), self.current_position())
 
         return energy

@@ -9,6 +9,9 @@ import math
 from utils import dot
 from optparse import OptionParser
 
+k_b = 1.38064852e-23
+
+
 def die(message = ''):
     print('An error occurred')
     if message:
@@ -16,11 +19,13 @@ def die(message = ''):
 
     sys.exit(1)
 
+
 def die_prompt(message=''):
     print(message)
     res = raw_input('Type y for exit: ')
     if res == 'y':
         sys.exit(1)
+
 
 def handle_arguments():
     parser = OptionParser()
@@ -29,12 +34,15 @@ def handle_arguments():
     parser.add_option("-l", "--dampening", dest="l", help="(OPTIONAL) Set the dampening factor", metavar="DAMP")
     parser.add_option("-T", "--temperature", dest="T", help="Set the temperature", metavar="TEMP")
     parser.add_option("-B", "--magneticfield", dest="B", help="Set the external B field, comma delimited (-B x,y,z)", metavar="MAGN")
-    parser.add_option("-J", "--NNIC", dest="J", help="Set the nearest neighbour interaction constant", metavar="NNIC") # I enheder af kelvin.
+    parser.add_option("-J", "--NNIC", dest="J", help="Set the nearest neighbour interaction constant (Kelvin)", metavar="NNIC") # I enheder af kelvin.
     parser.add_option("-N", "--iterations", dest="N_simulation", help="Set the amount of iterations", metavar="ITER")
-    parser.add_option("-A", "--anneal", dest="anneal", help="Enable annealing in N steps", metavar="A")
-    parser.add_option("-p", "--plot", dest="should_plot", help="Do you want to plot the positions?", metavar="P")
+    parser.add_option("-A", "--anneal", dest="anneal", help="Enable annealing in N steps", metavar="N")
     parser.add_option("-F", "--fourier", dest="fourier", help="Should we fourier transform", metavar="F")
     parser.add_option("-D", "--datafile", dest="datafile", help="Use existing datafile (set path to data)", metavar="D")
+    parser.add_option("-q", "--scattering-vector", dest="q", help="Scattering vector used for fourier transformation, comma delimited (-q x,y,z)", metavar="q")
+    parser.add_option("--plot-spins", dest="should_plot_spins", help="Do you want to plot the spins?", metavar="P")
+    parser.add_option("--plot-energies", dest="should_plot_energy", help="Do you want to plot the energy?", metavar="P")
+    parser.add_option("--plot-neutron", dest="should_plot_neutron", help="Do you want to plot the scattering profile?", metavar="P")
     parser.add_option("--parameterfile", dest="parameter_file", help="Use existing parameter file (set path to parameters)", metavar="PARAMS")
     parser.add_option("--dt", dest="dt", help="Set the dt", metavar="DT")
 
@@ -84,7 +92,7 @@ def handle_arguments():
         die('You must set the temperature!')
 
     if options.J:
-        options.J = float(options.J)
+        options.J = float(options.J) * k_b
     else:
         die('You must the the nearest neighbour inteaction constant (J)')
 
@@ -113,7 +121,7 @@ def handle_arguments():
         options.B = np.array([0, 0, 0])
 
     if options.N_simulation:
-        options.N_simulation = (2 ** (int(options.N_simulation) - 1)).bit_length()
+        options.N_simulation = (2 ** (int(float(options.N_simulation)) - 1)).bit_length()
     else:
         die('You must set the iterations (N_simulation)!')
 
@@ -125,7 +133,23 @@ def handle_arguments():
     if options.anneal:
         options.anneal = int(float(options.anneal))
 
+    if options.q and ',' in options.q:
+        q = options.q.split(',')
+        options.q = [0, 0, 0]
+
+        if q[0]:
+            options.q[0] = float(q[0])
+
+        if q[1]:
+            options.q[1] = float(q[1])
+
+        if q[2]:
+            options.q[2] = float(q[2])
+
+        options.q = np.array(options.q)
+
     return options
+
 
 def handle_constant_properties(options):
     # Use options provided in file.
@@ -139,7 +163,7 @@ def handle_constant_properties(options):
     """
     Physical quantities
     """
-    options.k_b = 1.38064852e-23
+    options.k_b = k_b
     options.g = -2.002
     options.mu_b = 9.274009994e-24
     options.hbar = 1.054571800e-34
@@ -147,6 +171,7 @@ def handle_constant_properties(options):
     options.gamma = (options.g * options.mu_b) / options.hbar
 
     return options
+
 
 def get_data_dir(o):
     # Create a foldername to save our results in.

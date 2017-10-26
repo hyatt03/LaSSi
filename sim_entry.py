@@ -15,7 +15,8 @@ from cli_helper import handle_arguments, handle_constant_properties, get_data_di
 from Particles import handle_molecule_from_file
 from simulation_iterator import simulation_iterator, plot_spins
 from annealing import parrallel_anneal
-from fourier import fourier, plot_fourier
+from fourier import fourier, plot_fourier, plot_energy_spectrum, calculate_scattering_intensity, parallel_compute_scattering_intensity
+
 
 def main():
     o = handle_arguments() # Getting options
@@ -44,6 +45,7 @@ def main():
     if o.datafile:
         print('Loading datafile')
         results = pd.read_hdf(o.datafile)
+        print('Loaded {} rows'.format(len(results)))
     else:
         # Begin the main simulation phase
         print('Starting simulation')
@@ -57,21 +59,31 @@ def main():
         print('Saved data to {}'.format(filename))
 
     # Plot if needed.
-    if o.should_plot:
+    if o.should_plot_spins:
         print('Plotting spins')
         plot_spins(results, '{}/spin_plot'.format(data_dir))
 
     # Runs a fourier transform
     if o.fourier:
         print('Transforming results')
-        total_fourier, f, energy = fourier(o, results)
+        # parallel_compute_scattering_intensity(o, results, particles)
+        # calculate_scattering_intensity(o, results, particles)
+        # total_fourier, f, energy = fourier(o, results)
+        I_aa_temp, energy, frequency = fourier(o, results, particles)
+
+        print(I_aa_temp)
 
         # Plot the transformed variables
-        if o.should_plot:
+        if o.should_plot_energy:
             print('Plotting transformed results')
-            plot_fourier(total_fourier, f, energy)
+            plot_fourier(o, '{}/energy_q0.png'.format(data_dir), I_aa_temp, frequency, energy)
+
+        if o.should_plot_neutron:
+            print('Plotting energy spectrum')
+            plot_energy_spectrum(o, I_aa_temp, frequency, energy)
 
     return results
+
 
 if __name__ == '__main__':
     main()

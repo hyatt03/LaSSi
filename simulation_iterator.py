@@ -19,6 +19,7 @@ def simulation_iterator(options, particles):
     perc = 0
     for i in range(1, options.N_simulation + 1):
         if (100 * i) / options.N_simulation > perc:
+            # print('Size of timeseries: {}, at {} iterations'.format(sys.getsizeof(timeseries), i))
             perc = (100 * i) / options.N_simulation
             print 'Simulating {0}%\r'.format(perc),
             sys.stdout.flush()
