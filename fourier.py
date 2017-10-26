@@ -134,7 +134,7 @@ def plot_fourier(o, filename, total_fourier, f, energy, smoothing = False):
     plt.savefig(filename, bbox_inches='tight', dpi=300)
 
 
-def plot_energy_spectrum(o, total_fourier, f, energy):
+def plot_energy_spectrum(o, qs, I_aa_temps, energies, frequencies):
 
     pass
 

@@ -66,21 +66,20 @@ def main():
     # Runs a fourier transform
     if o.fourier:
         print('Transforming results')
-        # parallel_compute_scattering_intensity(o, results, particles)
+        #
         # calculate_scattering_intensity(o, results, particles)
         # total_fourier, f, energy = fourier(o, results)
-        I_aa_temp, energy, frequency = fourier(o, results, particles)
-
-        print(I_aa_temp)
 
         # Plot the transformed variables
         if o.should_plot_energy:
             print('Plotting transformed results')
+            I_aa_temp, energy, frequency = fourier(o, results, particles)
             plot_fourier(o, '{}/energy_q0.png'.format(data_dir), I_aa_temp, frequency, energy)
 
         if o.should_plot_neutron:
             print('Plotting energy spectrum')
-            plot_energy_spectrum(o, I_aa_temp, frequency, energy)
+            qs, I_aa_temps, energies, frequencies = parallel_compute_scattering_intensity(o, results, particles)
+            plot_energy_spectrum(o, qs, I_aa_temps, energies, frequencies)
 
     return results
 
