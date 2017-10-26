@@ -7,9 +7,10 @@ import random
 import sys
 
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
+from mpl_toolkits.mplot3d import Axes3D  # Not directly used, but required to use 3d projection
 
 timeseries = []
+
 
 def simulation_iterator(options, particles):
     sigma = math.sqrt(2 * options.l * options.k_b * options.T * options.hbar * options.dt / \
@@ -27,17 +28,21 @@ def simulation_iterator(options, particles):
         # ensure the effective B field is correct.
         particles.combine_neighbours()
 
+        # Create a random pertubation to emulate temperature
         b_rand = random.gauss(0, sigma)
         u = random.random() * 2 * math.pi
         v = math.acos(2 * random.random() - 1)
         b_rand_vec = b_rand * np.array([math.sin(v) * math.cos(u), math.sin(v) * math.sin(u), math.cos(v)])
 
+        # Evaluate each particle to compute the next state
         for particle in particles.atoms:
             id, pos = particle.take_RK4_step(b_rand_vec)
             energy = particle.get_energy(particles.atoms)
             timeseries.append((i * options.dt, id, pos[0], pos[1], pos[2], energy))
 
+    # Create a dataframe containing the results for further analysis.
     return pd.DataFrame(timeseries, columns=('t', 'id', 'pos_x', 'pos_y', 'pos_z', 'energy'))
+
 
 def plot_spins(results, filename):
     print('Saving spins plot')
