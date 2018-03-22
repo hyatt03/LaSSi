@@ -10,6 +10,13 @@ import pandas as pd
 import math
 from cli_helper import die
 
+using_openbabel = False
+try:
+    import openbabelaaaa
+    using_openbabel = True
+except:
+    import ase.io
+
 class Particles(object):
     def __init__(self, molecule, options):
         self.options = options
@@ -18,10 +25,16 @@ class Particles(object):
 
         atoms = []
 
-        for obatom in openbabel.OBMolAtomIter(molecule):
-            # TODO: We only want magnetic moelcules, but more than just gd
-            if obatom.GetType() == 'Gd':
-                atoms.append((len(atoms), obatom))
+        if options.using_openbabel:
+            for obatom in openbabel.OBMolAtomIter(molecule):
+                # TODO: We only want magnetic moelcules, but more than just gd
+                if obatom.GetType() == 'Gd':
+                    atoms.append((len(atoms), obatom))
+        else:
+            for atom in molecule:
+                print(atom, atom.symbol)
+                if atom.symbol == 'Gd':
+                    atoms.append((len(atoms), atom))
 
         self.N_atoms = len(atoms)
 
@@ -82,6 +95,13 @@ def check_filetype(obConversion, filetype):
     return False
 
 def handle_molecule_from_file(options):
+    options.using_openbabel = using_openbabel
+    if options.using_openbabel:
+        return handle_molecule_from_file_using_openbabel(options)
+    else:
+        return handle_molecule_from_file_using_ase(options)
+
+def handle_molecule_from_file_using_openbabel(options):
     filetype = options.filename.split('.')[-1]
     obConversion = openbabel.OBConversion()
 
@@ -96,3 +116,12 @@ def handle_molecule_from_file(options):
     print('Opened molecule with {} atoms and a total mass of {}'.format(mol.NumAtoms(), mol.GetExactMass()))
 
     return Particles(mol, options)
+
+def handle_molecule_from_file_using_ase(options):
+    filetype = options.filename.split('.')[-1]
+    allowed_formats = ['xyz', 'cube', 'pdb', 'traj', 'py']
+
+    if not filetype in allowed_formats:
+        die('Input filetype not supported, try using openbabel')
+
+    return Particles(ase.io.read(str(options.filename)), options)

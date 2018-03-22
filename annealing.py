@@ -30,7 +30,7 @@ def parrallel_anneal(options, particles, sets):
     return best_set
 
 def anneal_particles(options, particles):
-    T_stair_steps = np.linspace(options.T, options.T * 10, num=options.anneal)[::-1]
+    T_stair_steps = np.linspace(0, options.T * 10, num=options.anneal)[::-1]
 
     for T in T_stair_steps:
         options.T = T

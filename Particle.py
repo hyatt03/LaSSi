@@ -9,13 +9,18 @@ from utils import cross, dot
 
 
 class Particle(object):
-    def __init__(self, id, obatom, N, neighbours, options):
+    def __init__(self, id, atom, N, neighbours, options):
         self.id = id
         self.N = N
         self.B_eff = np.array([0.0, 0.0, 0.0], dtype='float')
         self.options = options
         self.neighbours = neighbours
-        self.lattice_position = np.array([obatom.GetX(), obatom.GetY(), obatom.GetZ()], dtype='float')
+
+        if options.using_openbabel:
+            self.lattice_position = np.array([atom.GetX(), atom.GetY(), atom.GetZ()], dtype='float')
+        else:
+            self.lattice_position = atom.position
+
         self.pos = self.lattice_position / math.sqrt(dot(self.lattice_position, self.lattice_position))
 
         x, y, z = self.pos[0], self.pos[1], self.pos[2]
@@ -45,7 +50,7 @@ class Particle(object):
     def calculate_RK4_cartesian(self, p):
         o = self.options
 
-        return o.gamma * o.spin * (cross(p, self.B_eff) + o.l * (self.B_eff * dot(p, p) - p * dot(p, self.B_eff)))
+        return o.gamma * o.spin * (cross(p, self.B_eff) + o.l * o.spin * (self.B_eff * dot(p, p) - p * dot(p, self.B_eff)))
 
     def take_RK4_step(self, b_rand):
         # Get the current position
