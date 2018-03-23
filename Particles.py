@@ -5,14 +5,13 @@ Class that contains all the particles in the simulation.
 """
 
 from Particle import Particle
-import openbabel
 import pandas as pd
 import math
 from cli_helper import die
 
 using_openbabel = False
 try:
-    import openbabelaaaa
+    import openbabel
     using_openbabel = True
 except:
     import ase.io
