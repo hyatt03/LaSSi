@@ -57,7 +57,7 @@ def run_computation_on_q(arg):
             # Calculate the intensities
             L = len(fft_data)
             P2 = abs(Y / L)
-            fourier_temp = P2[:(L / 2)]
+            fourier_temp = P2[:int(L / 2)]
             fourier_temp[1:] = 2 * fourier_temp[1:]
 
             # Calculate the frequencies and energies these intensities correspond to
