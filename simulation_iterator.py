@@ -22,7 +22,7 @@ def simulation_iterator(options, particles):
         if (100 * i) / options.N_simulation > perc:
             # print('Size of timeseries: {}, at {} iterations'.format(sys.getsizeof(timeseries), i))
             perc = (100 * i) / options.N_simulation
-            print 'Simulating {0}%\r'.format(perc),
+            print('Simulating {0}%\r'.format(perc))
             sys.stdout.flush()
 
         # ensure the effective B field is correct.

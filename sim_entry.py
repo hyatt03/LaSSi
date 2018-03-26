@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import matplotlib
-matplotlib.use('cairo')
+matplotlib.use('agg')
 # [u'pgf', u'ps', u'Qt4Agg', u'GTK', u'GTKAgg', u'nbAgg', u'agg', u'cairo',
 # u'MacOSX', u'GTKCairo', u'Qt5Agg', u'template', u'WXAgg', u'TkAgg',
 # u'GTK3Cairo', u'GTK3Agg', u'svg', u'WebAgg', u'pdf', u'gdk', u'WX']
@@ -31,7 +31,7 @@ def main():
     # Save the options of this run
     with open('{}/parameters.json'.format(data_dir), 'w') as params:
         options_dict = vars(o)
-        for key, value in options_dict.iteritems():
+        for key, value in options_dict.items():
             if type(value) == type(np.array([])):
                 options_dict[key] = value.tolist()
 

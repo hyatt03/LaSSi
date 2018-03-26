@@ -178,7 +178,7 @@ def get_data_dir(o):
     cleaned_filename = o.filename.split('/')[-1].split('.')[0]
     m = hashlib.md5()
     m.update('{}_{}_{}_{}_{}_{}_{}_{}' \
-                    .format(cleaned_filename, o.N_simulation, o.dt, o.l, o.T, o.B[0], o.B[1], o.B[2]))
+                    .format(cleaned_filename, o.N_simulation, o.dt, o.l, o.T, o.B[0], o.B[1], o.B[2]).encode('utf8'))
     directory_name = m.hexdigest()
     data_dir = '{}/{}'.format(o.data_dir, directory_name)
 
