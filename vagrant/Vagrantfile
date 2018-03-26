@@ -1,0 +1,25 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+HOST_NAME = "Centos7-B1P"
+
+Vagrant.configure(2) do |config|
+  # Centos 7
+  config.vm.box = "centos/7"
+  config.vm.define HOST_NAME do |h|
+  end
+
+  # This is the hostname that the virtual machine uses internally.
+  config.vm.hostname = HOST_NAME
+
+  config.vm.provider "virtualbox" do |vb|
+    # Display the VirtualBox GUI when booting the machine
+    vb.name = HOST_NAME
+    vb.customize ["modifyvm", :id, "--memory", "2048"]
+    vb.customize ["modifyvm", :id, "--cpus", "2"]
+    vb.customize ["modifyvm", :id, "--ioapic", "on"]
+    vb.customize ["modifyvm", :id, "--hwvirtex", "on"]
+  end
+
+  config.vm.provision "shell", path: "provision/deps.sh"
+end
