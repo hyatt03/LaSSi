@@ -4,7 +4,6 @@ import os
 import sys
 import hashlib
 import numpy as np
-import json
 import math
 from utils import dot
 from optparse import OptionParser
@@ -42,30 +41,9 @@ def handle_arguments():
     parser.add_option("-q", "--scattering-vector", dest="q", help="Scattering vector used for fourier transformation, comma delimited (-q x,y,z)", metavar="q")
     parser.add_option("--plot-spins", dest="should_plot_spins", help="Do you want to plot the spins?", metavar="P")
     parser.add_option("--plot-energies", dest="should_plot_energy", help="Do you want to plot the energy?", metavar="P")
-    parser.add_option("--plot-neutron", dest="should_plot_neutron", help="Do you want to plot the scattering profile?", metavar="P")
-    parser.add_option("--parameterfile", dest="parameter_file", help="Use existing parameter file (set path to parameters)", metavar="PARAMS")
     parser.add_option("--dt", dest="dt", help="Set the dt", metavar="DT")
 
     (options, args) = parser.parse_args()
-
-    # Handle parameter files
-    if options.parameter_file:
-        print('Loading parameters from {}'.format(options.parameter_file))
-
-        # Read from the json file
-        with open(options.parameter_file, 'r') as params:
-            o = json.loads(params.readlines()[0])
-
-        for key, value in o.iteritems():
-            if key == 'parameter_file':
-                value = options.parameter_file # Keep this options for later logic
-
-            if type(value) == type([]):
-                value = np.array(value) # Convert arrays back to ndarrays
-
-            setattr(options, str(key), value)
-
-        return options
 
     if not options.filename and not options.datafile:
         die('An inputfile or datafile is required!')
@@ -148,28 +126,8 @@ def handle_arguments():
 
         options.q = np.array(options.q)
 
-    return options
-
-
-def handle_constant_properties(options):
-    # Use options provided in file.
-    if options.parameter_file:
-        return options
-
-    # Set data directory
-    # TODO: Optional parameter for data dir.
+    # Set the data dir
     options.data_dir = os.path.dirname(os.path.abspath(__file__)) + '/data'
-
-    """
-    Physical quantities
-    """
-    options.k_b = k_b
-    options.g = -2.002
-    options.mu_b = 9.274009994e-24
-    options.hbar = 1.054571800e-34
-    options.GHz_to_meV = 0.004135665538536
-    options.Hz_to_meV = 4.135665538536e-12
-    options.gamma = (options.g * options.mu_b) / options.hbar
 
     return options
 

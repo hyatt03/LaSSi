@@ -18,8 +18,6 @@ import os
 from pathlib import Path
 import hashlib
 
-
-
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D  # Not directly used, but required to use 3d projection
 

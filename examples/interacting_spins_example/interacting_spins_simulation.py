@@ -28,7 +28,7 @@ if __name__ == '__main__':
     sim.run_anneal(2e5)
 
     # Run the simulation
-    sim.run_simulation(1e6)
+    sim.run_simulation(1e5)
 
     # Run the transformations on a range of scattering vectors
     for q_size in np.arange(0.2, 1.3, 0.1):
