@@ -9,31 +9,20 @@ import pandas as pd
 import math
 from cli_helper import die
 
-using_openbabel = False
-try:
-    import openbabel
-    using_openbabel = True
-except:
-    import ase.io
+import ase.io
 
 class Particles(object):
-    def __init__(self, molecule, options):
+    def __init__(self, molecule, options, constants):
         self.options = options
+        self.constants = constants
         self.atoms = []
         self.current = 0
 
         atoms = []
 
-        if options.using_openbabel:
-            for obatom in openbabel.OBMolAtomIter(molecule):
-                # TODO: We only want magnetic moelcules, but more than just gd
-                if obatom.GetType() == 'Gd':
-                    atoms.append((len(atoms), obatom))
-        else:
-            for atom in molecule:
-                print(atom, atom.symbol)
-                if atom.symbol == 'Gd':
-                    atoms.append((len(atoms), atom))
+        for atom in molecule:
+            if atom.symbol in options['magnetic_molecules']:
+                atoms.append((len(atoms), atom))
 
         self.N_atoms = len(atoms)
 
@@ -43,23 +32,26 @@ class Particles(object):
             distances = []
             for inner_id, inner_atom in atoms:
                 if id != inner_id:
-                    distances.append((inner_id, atom.GetDistance(inner_atom)))
+                    distances.append((inner_id, molecule.get_distance(atom.index, inner_atom.index)))
 
             distances_frame = pd.DataFrame(distances)
             closest_neighbour_indexes = []
 
-            if self.N_atoms > 1:
+            if self.N_atoms > 2:
                 distances_frame.sort_values(1, inplace=True)
 
                 closest_atom = distances_frame.iloc[0]
-                delta = 0.1
                 for i in range(0, self.N_atoms):
-                    if math.fabs(distances_frame.iloc[i][1] - closest_atom[1]) < delta:
+                    if math.fabs(distances_frame.iloc[i][1] - closest_atom[1]) < options['minimum_delta']:
                         closest_neighbour_indexes.append(distances_frame.iloc[i].name)
                     else:
                         break
 
-            self.atoms.append(Particle(id, atom, self.N_atoms, closest_neighbour_indexes, self.options))
+            elif self.N_atoms > 1:
+                # Special case, only two atoms, just add the other atom.
+                closest_neighbour_indexes.append(distances[0][0])
+
+            self.atoms.append(Particle(id, atom, self.N_atoms, closest_neighbour_indexes, self.options, self.constants))
 
             # TODO: Add support for initial conditions
 
@@ -89,41 +81,15 @@ class Particles(object):
 
         return energy
 
-def check_filetype(obConversion, filetype):
-    for format in obConversion.GetSupportedInputFormat():
-        if format.startswith(filetype):
-            return True
+    def get_atom_from_tablename(self, tablename):
+        return self.atoms[int(tablename.replace('p', ''))]
 
-    return False
 
-def handle_molecule_from_file(options):
-    options.using_openbabel = using_openbabel
-    if options.using_openbabel:
-        return handle_molecule_from_file_using_openbabel(options)
-    else:
-        return handle_molecule_from_file_using_ase(options)
-
-def handle_molecule_from_file_using_openbabel(options):
-    filetype = options.filename.split('.')[-1]
-    obConversion = openbabel.OBConversion()
-
-    if not check_filetype(obConversion, filetype):
-        die('Input filetype not supported, check http://openbabel.org/docs/2.3.0/FileFormats/Overview.html for supported formats')
-
-    obConversion.SetInAndOutFormats(str(filetype), "pdb")
-
-    mol = openbabel.OBMol()
-    obConversion.ReadFile(mol, str(options.filename))
-
-    print('Opened molecule with {} atoms and a total mass of {}'.format(mol.NumAtoms(), mol.GetExactMass()))
-
-    return Particles(mol, options)
-
-def handle_molecule_from_file_using_ase(options):
-    filetype = options.filename.split('.')[-1]
+def handle_molecule_from_file(options, constants):
+    filetype = options['input_file'].split('.')[-1]
     allowed_formats = ['xyz', 'cube', 'pdb', 'traj', 'py']
 
     if not filetype in allowed_formats:
-        die('Input filetype not supported, try using openbabel')
+        die('Input filetype not supported. Supported types: {}'.format(allowed_formats))
 
-    return Particles(ase.io.read(str(options.filename)), options)
+    return Particles(ase.io.read(str(options['input_file'])), options, constants)

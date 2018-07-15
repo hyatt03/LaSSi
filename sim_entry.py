@@ -3,10 +3,6 @@
 
 import matplotlib
 matplotlib.use('agg')
-# [u'pgf', u'ps', u'Qt4Agg', u'GTK', u'GTKAgg', u'nbAgg', u'agg', u'cairo',
-# u'MacOSX', u'GTKCairo', u'Qt5Agg', u'template', u'WXAgg', u'TkAgg',
-# u'GTK3Cairo', u'GTK3Agg', u'svg', u'WebAgg', u'pdf', u'gdk', u'WX']
-
 
 import json
 import pandas as pd
@@ -16,6 +12,7 @@ from Particles import handle_molecule_from_file
 from simulation_iterator import simulation_iterator, plot_spins
 from annealing import parrallel_anneal
 from fourier import fourier, plot_fourier, plot_energy_spectrum, calculate_scattering_intensity, parallel_compute_scattering_intensity
+import matplotlib.pyplot as plt
 
 
 def main():
@@ -66,10 +63,6 @@ def main():
     # Runs a fourier transform
     if o.fourier:
         print('Transforming results')
-        #
-        # calculate_scattering_intensity(o, results, particles)
-        # total_fourier, f, energy = fourier(o, results)
-
         # Plot the transformed variables
         if o.should_plot_energy:
             print('Plotting transformed results')
@@ -79,7 +72,26 @@ def main():
         if o.should_plot_neutron:
             print('Plotting energy spectrum')
             qs, I_aa_temps, energies, frequencies = parallel_compute_scattering_intensity(o, results, particles)
-            plot_energy_spectrum(o, qs, I_aa_temps, energies, frequencies)
+
+            fig, ax = plt.subplots()
+
+            energy = energies[0]
+            for temp in I_aa_temps:
+                y_data = (temp[0][0:len(energy)] + temp[1][0:len(energy)] + temp[2][0:len(energy)]) / 3
+                ax.plot(energy, y_data)
+
+            plt.xlim(0, 0.6)
+            plt.xlabel('Energy [meV]')
+            plt.ylabel('Intensity [A.U.]')
+
+            box = ax.get_position()
+            ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+
+            plt.legend(['q = {}'.format(q) for q in qs], loc='center left', bbox_to_anchor=(1, 0.5))
+
+            plt.savefig('{}/multi_q_spektrum.png'.format(data_dir), bbox_inches='tight', dpi=300)
+
+            # plot_energy_spectrum(o, '{}/energy_spectrum.png'.format(data_dir), qs, I_aa_temps, energies, frequencies)
 
     return results
 

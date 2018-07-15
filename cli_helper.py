@@ -34,9 +34,9 @@ def handle_arguments():
     parser.add_option("-l", "--dampening", dest="l", help="(OPTIONAL) Set the dampening factor", metavar="DAMP")
     parser.add_option("-T", "--temperature", dest="T", help="Set the temperature", metavar="TEMP")
     parser.add_option("-B", "--magneticfield", dest="B", help="Set the external B field, comma delimited (-B x,y,z)", metavar="MAGN")
-    parser.add_option("-J", "--NNIC", dest="J", help="Set the nearest neighbour interaction constant (Kelvin)", metavar="NNIC") # I enheder af kelvin.
+    parser.add_option("-J", "--NNIC", dest="J", help="Set the nearest neighbour exchange constant (Kelvin)", metavar="NNIC") # I enheder af kelvin.
     parser.add_option("-N", "--iterations", dest="N_simulation", help="Set the amount of iterations", metavar="ITER")
-    parser.add_option("-A", "--anneal", dest="anneal", help="Enable annealing in N steps", metavar="N")
+    parser.add_option("-A", "--anneal", dest="anneal", help="Enable simulated annealing in N steps", metavar="N")
     parser.add_option("-F", "--fourier", dest="fourier", help="Should we fourier transform", metavar="F")
     parser.add_option("-D", "--datafile", dest="datafile", help="Use existing datafile (set path to data)", metavar="D")
     parser.add_option("-q", "--scattering-vector", dest="q", help="Scattering vector used for fourier transformation, comma delimited (-q x,y,z)", metavar="q")
@@ -168,6 +168,7 @@ def handle_constant_properties(options):
     options.mu_b = 9.274009994e-24
     options.hbar = 1.054571800e-34
     options.GHz_to_meV = 0.004135665538536
+    options.Hz_to_meV = 4.135665538536e-12
     options.gamma = (options.g * options.mu_b) / options.hbar
 
     return options

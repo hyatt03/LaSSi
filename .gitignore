@@ -8,3 +8,5 @@ data
 .idea
 profiles
 .vagrant
+*.h5
+examples/**/*.png

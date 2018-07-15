@@ -1,27 +1,21 @@
 # -*- coding: utf-8 -*-
 
 import math
-import numpy as np
-import pandas as pd
 import random
 import sys
 
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D  # Not directly used, but required to use 3d projection
-
-timeseries = []
-
-
-def simulation_iterator(options, particles):
-    sigma = math.sqrt(2 * options.l * options.k_b * options.T * options.hbar * options.dt / \
-          ((options.g * options.mu_b) ** 2 * options.spin))
+def simulation_iterator(options, constants, particles, iterations, tables):
+    o, c = options, constants
+    sigma = math.sqrt(2 * o['l'] * c['k_b'] * o['T'] * c['hbar'] * o['dt'] / \
+          ((c['g'] * c['mu_b']) ** 2 * o['spin']))
 
     # Begin simulation
     perc = 0
-    for i in range(1, options.N_simulation + 1):
-        if (100 * i) / options.N_simulation > perc:
+    for i in range(1, int(iterations)):
+        progress = int(100 * i / iterations)
+        if  progress > perc:
             # print('Size of timeseries: {}, at {} iterations'.format(sys.getsizeof(timeseries), i))
-            perc = (100 * i) / options.N_simulation
+            perc = progress
             print('Simulating {0}%\r'.format(perc))
             sys.stdout.flush()
 
@@ -32,49 +26,29 @@ def simulation_iterator(options, particles):
         b_rand = random.gauss(0, sigma)
         u = random.random() * 2 * math.pi
         v = math.acos(2 * random.random() - 1)
-        b_rand_vec = b_rand * np.array([math.sin(v) * math.cos(u), math.sin(v) * math.sin(u), math.cos(v)])
+        b_rand_sph = (b_rand, u, v)
 
         # Evaluate each particle to compute the next state
         for particle in particles.atoms:
-            id, pos = particle.take_RK4_step(b_rand_vec)
+            tablename = 'p{}'.format(particle.id)
+            tablerow = tables[tablename].row
+
+            id, pos = particle.take_RK4_step(b_rand_sph)
             energy = particle.get_energy(particles.atoms)
-            timeseries.append((i * options.dt, id, pos[0], pos[1], pos[2], energy))
 
-    # Create a dataframe containing the results for further analysis.
-    return pd.DataFrame(timeseries, columns=('t', 'id', 'pos_x', 'pos_y', 'pos_z', 'energy'))
+            tablerow['t'] = i * o['dt']
+            tablerow['pos_x'] = pos[0]
+            tablerow['pos_y'] = pos[1]
+            tablerow['pos_z'] = pos[2]
+            tablerow['energy'] = energy
+            tablerow.append()
 
+            # Flush the data once in a while, increase to run faster (costs more memory)
+            if i % 10000 == 0:
+                tables[tablename].flush()
 
-def plot_spins(results, filename):
-    print('Saving spins plot')
+    # Flush at the end of the simulation
+    for particle in particles.atoms:
+        tables['p{}'.format(particle.id)].flush()
 
-    # 3d plot
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    ax.plot(results['pos_x'], results['pos_y'], results['pos_z'])
-
-    ax.set_xlim3d(-1, 1)
-    ax.set_ylim3d(-1, 1)
-    ax.set_zlim3d(-1, 1)
-
-    ax.set_xlabel('$S_x$')
-    ax.set_ylabel('$S_y$')
-    ax.set_zlabel('$S_z$')
-
-    plt.axis('equal')
-    plt.title('3d projektion af spin af enkelt Gd ion')
-
-    plt.savefig('{}_3d.png'.format(filename), bbox_inches = 'tight', dpi=300)
-
-    # xy projection
-    fig, ax = plt.subplots()
-    ax.plot(results['pos_x'], results['pos_y'])
-
-    plt.xlim(-1.1, 1.1)
-    plt.ylim(-1.1, 1.1)
-    plt.xlabel('$S_x$')
-    plt.ylabel('$S_y$')
-
-    plt.axis('equal')
-    plt.title('Projektion af xy planet for spin af enkelt Gd ion')
-
-    plt.savefig('{}_xy.png'.format(filename), bbox_inches='tight', dpi=300)
+    return tables
