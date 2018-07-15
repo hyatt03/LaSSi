@@ -17,12 +17,17 @@ import numpy as np
 import os
 from pathlib import Path
 import hashlib
+import re
 
 import matplotlib.pyplot as plt
+from matplotlib.colors import BoundaryNorm
+from matplotlib.ticker import MaxNLocator
 from mpl_toolkits.mplot3d import Axes3D  # Not directly used, but required to use 3d projection
 
 import warnings
 warnings.filterwarnings('ignore', category=NaturalNameWarning)
+
+scattering_regex = re.compile('^\[\s*([0-9]+).([0-9]*)\s*([0-9]+).([0-9]*)\s*([0-9]+).([0-9]*)\s*\]$')
 
 
 class BaseSimulation(object):
@@ -242,7 +247,44 @@ class BaseSimulation(object):
             plt.savefig(filename.format(direction), bbox_inches='tight', dpi=300)
 
     def plot_scattering_cross_section(self, filename):
-        pass
+        cmap = plt.get_cmap('PiYG')
+
+        for direction in ['xx', 'yy', 'zz']:
+            x = []
+            y = []
+            z = []
+            for key, value in self.transformtables.items():
+                res = scattering_regex.findall(key)
+                if len(res) > 0: # There should be max 1
+                    q_x = float('{}.{}'.format(res[0][0], res[0][1]))
+                    q_y = float('{}.{}'.format(res[0][2], res[0][3]))
+                    q_z = float('{}.{}'.format(res[0][4], res[0][5]))
+
+                    # Calculate the magnitude of the scattering vector
+                    x.append(np.sqrt(q_x ** 2 + q_y ** 2 + q_z ** 2))
+
+                    # Create energies array, should be constant across all qs
+                    if len(y) < 1:
+                        y = value.cols.energy
+
+                    # Append intensities for this combo of scattering vector and energies
+                    z.append(value.cols._f_col('I_{}'.format(direction)))
+
+            x = np.array(x)
+            y = np.array(y)
+            z = np.array(z)
+
+            z = z[:-1, :-1]
+            levels = MaxNLocator(nbins=15).tick_values(z.min(), z.max())
+            norm = BoundaryNorm(levels, ncolors=cmap.N, clip=True)
+
+            fig, ax = plt.subplots()
+
+            im = ax.pcolormesh(x, y, z, cmap=cmap, norm=norm)
+            fig.colorbar(im, ax=ax)
+
+            plt.savefig(filename.format(direction), bbox_inches='tight', dpi=300)
+
 
     def close(self):
         # Close the datafile

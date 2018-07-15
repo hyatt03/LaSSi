@@ -28,10 +28,10 @@ if __name__ == '__main__':
     sim.run_anneal(2e5)
 
     # Run the simulation
-    sim.run_simulation(1e5)
+    sim.run_simulation(1e7)
 
     # Run the transformations on a range of scattering vectors
-    for q_size in np.arange(0.2, 1.3, 0.1):
+    for q_size in np.arange(0.2, 1.3, 0.01):
         q = q_size * np.array([1, 0, 0])
         sim.run_transformations(q)
 
