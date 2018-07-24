@@ -18,7 +18,8 @@ class GdIonSimulation(BaseSimulation):
         self.options['dt'] = 1e-16
         self.options['J'] = 1e-6
         self.options['T'] = 0.05
-        self.options['B'] = np.array([0, 0, 0.]) # 0.1 tesla in z direction
+        self.options['B'] = np.array([0., 0., 0.1]) # 0.1 tesla in z direction
+        self.options['pbc'] = (True, True, False)
 
 
 if __name__ == '__main__':
@@ -28,10 +29,10 @@ if __name__ == '__main__':
     sim.run_anneal(2e5)
 
     # Run the simulation
-    sim.run_simulation(1e7)
+    sim.run_simulation(2**20)
 
     # Run the transformations on a range of scattering vectors
-    for q_size in np.arange(0.2, 1.3, 0.01):
+    for q_size in np.arange(0.2, 1., 0.1):
         q = q_size * np.array([1, 0, 0])
         sim.run_transformations(q)
 
@@ -52,6 +53,6 @@ if __name__ == '__main__':
     # Close the simulation
     sim.close()
 
-    print('cleaning files')
-    Path(sim.options['data_file']).unlink()
-    Path(sim.options['transform_file']).unlink()
+    # print('cleaning files')
+    # Path(sim.options['data_file']).unlink()
+    # Path(sim.options['transform_file']).unlink()

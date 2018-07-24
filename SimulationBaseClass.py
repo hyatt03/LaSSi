@@ -57,8 +57,12 @@ class BaseSimulation(object):
         'B': np.array([0, 0, 0]),             # External B-field
         'dt': 1e-15,                          # Small time interval
         'magnetic_molecules': ['Gd'],         # Selects the desired atoms for simulation
-        'minimum_delta': 0.1                  # We work within the nearest neighbour approximation,
+        'minimum_delta': 0.1,                 # We work within the nearest neighbour approximation,
                                               # so we find all the atoms within 0.1 Å
+        'repeat_cells': None,                 # Support for multiple unit cells, specify how many repeats along the
+                                              # three unit vectors of the structure
+        'pbc': None                           # Support for periodic boundary,
+                                              # specify which directions should be periodic
     }
 
     datafile = None
@@ -274,7 +278,7 @@ class BaseSimulation(object):
             y = np.array(y)
             z = np.array(z)
 
-            z = z[:-1, :-1]
+            # z = z[:-1, :-1]
             levels = MaxNLocator(nbins=15).tick_values(z.min(), z.max())
             norm = BoundaryNorm(levels, ncolors=cmap.N, clip=True)
 
