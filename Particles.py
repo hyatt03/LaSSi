@@ -20,7 +20,8 @@ class Particles(object):
         self.current = 0
         self.shape = ase.geometry.crystal_structure_from_cell(molecule.get_cell())
 
-        print('Loaded crystall with shape {} and {} atoms'.format(self.shape, len(molecule)))
+        if self.options['debug']:
+            print('Loaded crystall with shape {} and {} atoms'.format(self.shape, len(molecule)))
 
         molecule = self.repeat_molecule(molecule)
 
@@ -79,7 +80,7 @@ class Particles(object):
                     # Special case, only two atoms, just add the other atom.
                     closest_neighbour_indexes.append(distances[0][0])
 
-                self.atoms.append(Particle(id, atom, self.N_atoms, closest_neighbour_indexes, self.options, self.constants))
+            self.atoms.append(Particle(id, atom, self.N_atoms, closest_neighbour_indexes, self.options, self.constants))
 
             # TODO: Add support for initial conditions
 
@@ -115,10 +116,11 @@ class Particles(object):
         if repeats and len(repeats) > 0:
             try:
                 molecule = molecule.repeat(repeats)
-                print('Repeated molecule new size is: {} atoms'.format(len(molecule)))
+
+                if self.options['debug']:
+                    print('Repeated molecule new size is: {} atoms'.format(len(molecule)))
             except ValueError:
-                print('Could not copy unit cell, try using a .cif file instead.')
-                exit(1)
+                die('Could not copy unit cell, try using a .cif file instead.')
 
         return molecule
 

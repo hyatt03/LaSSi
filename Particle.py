@@ -41,9 +41,8 @@ class Particle(object):
 
         return self.pos
 
-    # Calculate the effective B field for this atom from it's neighbours
+    # Calculate the effective B field for this atom from it's nearest neighbours
     def combine_neighbours(self, neighbours):
-        # Kun nærmeste! Interaktionen til genbo vil være meget lavere og dermed approximeret væk
         o, c = self.options, self.constants
         self.B_eff = np.copy(self.options['B'])
         for item in self.neighbours:

@@ -11,9 +11,9 @@ def simulation_iterator(options, constants, particles, iterations, tables):
 
     # Begin simulation
     perc = 0
-    for i in range(1, int(iterations)):
+    for i in range(1, int(iterations) + 1):
         progress = int(100 * i / iterations)
-        if  progress > perc:
+        if  options['debug'] and progress > perc:
             # print('Size of timeseries: {}, at {} iterations'.format(sys.getsizeof(timeseries), i))
             perc = progress
             print('Simulating {0}%\r'.format(perc))

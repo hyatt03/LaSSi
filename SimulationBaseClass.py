@@ -61,8 +61,9 @@ class BaseSimulation(object):
                                               # so we find all the atoms within 0.1 Å
         'repeat_cells': None,                 # Support for multiple unit cells, specify how many repeats along the
                                               # three unit vectors of the structure
-        'pbc': None                           # Support for periodic boundary,
+        'pbc': None,                          # Support for periodic boundary,
                                               # specify which directions should be periodic
+        'debug': False                        # Select if debugging output is wanted
     }
 
     datafile = None
