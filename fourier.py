@@ -8,7 +8,8 @@ import cmath
 
 def transform_on_q(q, options, constants, timeseries, particles):
     o, c = options, constants
-    print('Computing intensities for q = [{}, {}, {}]'.format(q[0], q[1], q[2]))
+    if o['debug']:
+        print('Computing intensities for q = [{}, {}, {}]'.format(q[0], q[1], q[2]))
 
     sum_A = [0, 0, 0]
     sum_B = [[], [], []]

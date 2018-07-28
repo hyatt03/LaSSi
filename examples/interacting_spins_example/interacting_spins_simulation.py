@@ -1,8 +1,8 @@
 from SimulationBaseClass import BaseSimulation
 import numpy as np
-from pathlib import Path
 
 basedir = 'examples/interacting_spins_example/'
+
 
 class GdIonSimulation(BaseSimulation):
     def __init__(self):
@@ -52,7 +52,3 @@ if __name__ == '__main__':
 
     # Close the simulation
     sim.close()
-
-    # print('cleaning files')
-    # Path(sim.options['data_file']).unlink()
-    # Path(sim.options['transform_file']).unlink()

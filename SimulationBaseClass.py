@@ -200,6 +200,22 @@ class BaseSimulation(object):
         self.transformtables[str(q)].flush()
         return self.transformtables[str(q)]
 
+    def plot_positions_xy(self, filename):
+        fig, ax = plt.subplots()
+
+        x, y = [], []
+        for p in self.particles.atoms:
+            x.append(p.lattice_position[0])
+            y.append(p.lattice_position[1])
+
+        ax.plot(x, y, 'o')
+
+        plt.xlabel('$X$')
+        plt.ylabel('$Y$')
+
+        plt.axis('equal')
+        plt.savefig(filename, bbox_inches='tight', dpi=300)
+
     def plot_spins_xy(self, filename):
         fig, ax = plt.subplots()
 

@@ -6,6 +6,7 @@ Class that contains all the particles in the simulation.
 
 from Particle import Particle
 import pandas as pd
+import numpy as np
 import math
 from cli_helper import die
 
@@ -27,6 +28,8 @@ class Particles(object):
 
         # Find dimensions of the molecule
         self.len_x, self.len_y, self.len_z = molecule.get_cell_lengths_and_angles()[:3]
+        if all(molecule.get_cell_lengths_and_angles()[:3]) == 0.:
+            self.len_x, self.len_y, self.len_z = self.find_cubic_size(molecule)
 
         atoms = []
         for atom in molecule:
@@ -48,7 +51,6 @@ class Particles(object):
 
                 if self.N_atoms > 2:
                     # Next we want to enable periodic boundary conditions (if applicable)
-                    # Only works for 3 or more atoms
                     close_sides = self.get_close_sides()
 
                     p = atom.position
@@ -71,8 +73,10 @@ class Particles(object):
                     # Compute the nearest neighbours
                     closest_atom = distances_frame.iloc[0]
                     for i in range(0, self.N_atoms):
-                        if math.fabs(distances_frame.iloc[i][1] - closest_atom[1]) < options['minimum_delta']:
-                            closest_neighbour_indexes.append(int(distances_frame.iloc[i][0]))
+                        neighbour_id = int(distances_frame.iloc[i][0])
+                        if math.fabs(distances_frame.iloc[i][1] - closest_atom[1]) < options['minimum_delta'] and \
+                                neighbour_id not in closest_neighbour_indexes:
+                            closest_neighbour_indexes.append(neighbour_id)
                         else:
                             break
 
@@ -109,6 +113,44 @@ class Particles(object):
 
     def get_atom_from_tablename(self, tablename):
         return self.atoms[int(tablename.replace('p', ''))]
+
+    # Calculates a bounding box when this information is unavailable
+    def find_cubic_size(self, molecule):
+        # First set initial values and copy the positions
+        x, y, z = 1, 1, 1
+        positions = molecule.positions.copy()
+
+        # We only want to calculate a size if more than one atom exists
+        if len(positions) > 1:
+            # Set initial guesses of the max and min coordinates
+            max_s = positions[0].copy()
+            min_s = positions[0].copy()
+
+            # Set initial minimum distance between atoms
+            min_d = [10, 10, 10]
+
+            # Iterate over the positions
+            for idx, p in enumerate(positions):
+                # Check if we've found a new max or min for a given dimension
+                for i in range(0, 3):
+                    if p[i] > max_s[i]:
+                        max_s[i] = p[i]
+                    elif p[i] < min_s[i]:
+                        min_s[i] = p[i]
+
+                # Calculate the distances to the rest of the atoms and check if we've found a new minimum distance
+                for idx2 in range(idx + 1, len(positions)):
+                    p2 = positions[idx2]
+                    dist = np.abs(p - p2)
+                    for i in range(0, 3):
+                        if dist[i] < min_d[i]:
+                            min_d[i] = dist[i]
+
+            # Calculate the size of the bounding box by subtracting the min position from the max position
+            # Add the minimum distance between atoms to pad the bounding box
+            x, y, z = max_s - min_s + min_d
+
+        return x, y, z
 
     def repeat_molecule(self, molecule):
         repeats = self.options['repeat_cells']

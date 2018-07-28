@@ -94,3 +94,36 @@ class BasicFunctionalityTest(TestCase):
         # Repeat a transformation
         self.sim.run_transformations(np.array([1., 0, 0]))
         self.assertEqual(len(list(self.sim.transformtables.keys())), 2)
+
+    def test_multiple_atoms(self):
+        # Basic setup
+        self.sim.options['input_file'] = 'tests/molecules/ten_spins_chain.pdb'
+
+        # Ensure were not cheating our selves
+        self.assertIsNone(self.sim.particles)
+
+        # Load the actual particles
+        self.sim.load_particles()
+
+        # Check that they loaded
+        self.assertEqual(len(self.sim.particles.atoms), 10)
+
+        # Check that the ends have one neighbour
+        self.assertEqual(len(self.sim.particles.atoms[0].neighbours), 1)
+        self.assertEqual(len(self.sim.particles.atoms[9].neighbours), 1)
+
+        # Check that one of the middle ones have 2 neighbours
+        self.assertEqual(len(self.sim.particles.atoms[1].neighbours), 2)
+
+    def test_periodic_boundary_conditions(self):
+        # Basic setup
+        self.sim.options['input_file'] = 'tests/molecules/ten_spins_chain.pdb'
+        self.sim.options['pbc'] = (True, False, False)
+        self.sim.load_particles()
+
+        # Check that they loaded
+        self.assertEqual(len(self.sim.particles.atoms), 10)
+
+        # Check that all the atoms have two neighbours
+        for a in self.sim.particles.atoms:
+            self.assertEqual(len(a.neighbours), 2)
