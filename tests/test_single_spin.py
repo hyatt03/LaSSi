@@ -1,11 +1,11 @@
-from unittest import TestCase
+import unittest
 from SimulationBaseClass import BaseSimulation
 from tempfile import mkdtemp
 from shutil import rmtree
 import numpy as np
 
 
-class SingleSpinTest(TestCase):
+class SingleSpinTest(unittest.TestCase):
     def setUp(self):
         # Create temporary folder for data files
         self.tmpdir = mkdtemp()
@@ -41,3 +41,6 @@ class SingleSpinTest(TestCase):
         max_value = max(self.sim.transformtables['[0 0 0]'].cols.I_xx)
         for row in self.sim.transformtables['[0 0 0]'].where('I_xx == {}'.format(max_value)):
             self.assertAlmostEqual(expected_energy, row['energy'], places=4)
+
+if __name__ == '__main__':
+    unittest.main()

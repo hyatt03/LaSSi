@@ -18,9 +18,9 @@ def dot(a, b):
 
 
 def to_sph(a):
-    r = math.sqrt(dot(a, a))
-    theta = math.atan2(math.sqrt(a[0] ** 2 + a[1] ** 2), a[2])
-    phi = math.atan2(a[1], a[2])
+    r = np.sqrt(a[0] * a[0] + a[1] * a[1] + a[2] * a[2])
+    theta = math.acos(a[2] / r)
+    phi = math.atan2(a[1], a[0])
 
     return r, theta, phi
 
