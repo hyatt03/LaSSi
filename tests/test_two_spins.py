@@ -11,6 +11,7 @@ class TwoSpinTest(unittest.TestCase):
     def setUp(self):
         # Create temporary folder for data files
         self.tmpdir = tempfile.mkdtemp()
+        self.tmpdir = 'data/two_spins_test'
 
         # Initialize a simulation
         self.sim = BaseSimulation()
@@ -32,12 +33,17 @@ class TwoSpinTest(unittest.TestCase):
 
     def tearDown(self):
         self.sim.close()
-        rmtree(self.tmpdir)
+        # rmtree(self.tmpdir)
 
     def test_exchange_frequence_as_deviation_angle(self):
-        deviation_angles = np.array(list(range(0, 90))) * np.pi / 180
+        deviation_angles = np.array(list(range(0, 45))) * np.pi / 180
+        deviation_angles = np.array([35 * np.pi / 180])
+
+        N = 2 ** 23
 
         for idx, d_angle in enumerate(deviation_angles):
+            self.sim.options['data_file'] = self.tmpdir + f'/data_{str(d_angle)}_{str(N)}.h5'
+
             # Start by setting the initial position of the spins
             r, theta1, phi1 = to_sph([np.cos(d_angle), np.sin(d_angle), 0])
             r, theta2, phi2 = to_sph([-np.cos(d_angle), np.sin(d_angle), 0])
@@ -46,7 +52,7 @@ class TwoSpinTest(unittest.TestCase):
             self.sim.particles.atoms[1].set_position(theta2, phi2)
 
             # Next run the simulation
-            self.sim.run_simulation(2 ** 23)
+            self.sim.run_simulation(N)
 
             # Run the transformation
             # self.sim.run_transformations(np.array([0, 0, 0]))
@@ -73,7 +79,7 @@ class TwoSpinTest(unittest.TestCase):
             self.sim.datafile = None
             self.sim.transformfile = None
             self.sim.transformtables = {}
-            rmtree(self.tmpdir)
+            # rmtree(self.tmpdir)
 
         # Initialize the simulation, run it, and get initial states
         # self.sim.run_transformations(np.array([0, 0, 0]))

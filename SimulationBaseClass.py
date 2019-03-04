@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 
 import matplotlib
-# matplotlib.use('agg')
+
+matplotlib.use('agg')
 # matplotlib.rcParams['agg.path.chunksize'] = 1000
 
 from Particles import handle_molecule_from_file, handle_molecule_from_ase
