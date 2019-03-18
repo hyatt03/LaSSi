@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import scipy.fftpack as sci
 import numpy as np
 from utils import dot
 import cmath
@@ -19,7 +18,9 @@ def transform_on_q(q, options, constants, timeseries, particles):
 
     # Sum over each particle
     for tablename, table in timeseries.items():
+        print('get atom from tablename')
         particle = particles.get_atom_from_tablename(tablename)
+        print('positions')
         positions = [
             table.cols.pos_x,
             table.cols.pos_y,
@@ -28,9 +29,11 @@ def transform_on_q(q, options, constants, timeseries, particles):
 
         transformed = [[], [], []]
 
+        print('dot p')
         q_dot_lattice = cmath.exp(-1j * dot(q, particle.lattice_position))
 
         for z in range(0, 3):
+            print('prep')
             # Sum over scattering vector dotted the particles lattice position
             sum_A[z] += positions[z][0] * q_dot_lattice
 
@@ -41,9 +44,12 @@ def transform_on_q(q, options, constants, timeseries, particles):
             while len(fft_data) < (2 ** (len(fft_data) - 1).bit_length()):
                 fft_data.append(0)
 
-            # Execute the transform
-            Y = sci.fft(fft_data)
+            print('about to do fft')
 
+            # Execute the transform
+            Y = np.abs(np.fft.fft(fft_data))
+
+            print('did fft')
             # Calculate the intensities
             # sampled = downsample(Y, 50000)
             sampled = Y
@@ -54,9 +60,8 @@ def transform_on_q(q, options, constants, timeseries, particles):
             fourier_temp[1:] = 2 * fourier_temp[1:]
 
             # Calculate the frequencies and energies these intensities correspond to
-            L = float(L)
-            frequency = [float(x) / (L * o['dt']) for x in np.arange(0, L / 2 - 1, (L - 1) / L)]
-            energy = [x * c['Hz_to_meV'] for x in frequency]
+            frequency = np.fft.fftfreq(len(fft_data), o['dt'])
+            energy = c['Hz_to_meV'] * frequency
 
             transformed[z] = fourier_temp
             energies = energy
@@ -69,6 +74,8 @@ def transform_on_q(q, options, constants, timeseries, particles):
                     sum_B[z].append(0)
 
                 sum_B[z][idx] += transformed[z][idx]
+
+            print('did rest')
 
     I_aa_temp = [
         [],  # xx

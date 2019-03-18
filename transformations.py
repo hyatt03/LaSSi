@@ -7,6 +7,7 @@ def save_raw_fft(E_vec, X, Y, Z, YZ):
 def run_fft(realspace_motion_parts, dt):
     FFT_res = 8
     power_range = 5 # meV
+    E_res = 0.01
 
     # Convolution (form either instrument resolution or just some minimal smoothing)
     conv_sigma = 0.006
@@ -22,9 +23,12 @@ def run_fft(realspace_motion_parts, dt):
 
     X_acc = 0
     Y_acc = 0
-    Z_acc = 0    YZ_acc = 0
+    Z_acc = 0
+    YZ_acc = 0
     E_vector = 0
     partTot = len(realspace_motion_parts)
+    NFFT = 0
+    f = 0
 
     for partNB in range(partTot):
         m_a = realspace_motion_parts[partNB]
@@ -35,9 +39,11 @@ def run_fft(realspace_motion_parts, dt):
         dE = f * hbar / (NFFT * meV)
         E_vector = freq * hbar / meV
 
-        X = np.power(np.abs(np.fft.fft(m_a[0, :], n = NFFT, axis = 0)), 2)
-        Y = np.power(np.abs(np.fft.fft(m_a[1, :], n = NFFT, axis = 0)), 2)
-        Z = np.power(np.abs(np.fft.fft(m_a[2, :], n = NFFT, axis = 0)), 2)
+        freqs = np.fft.rfftfreq(m_a.shape[0], dt)
+
+        X = np.abs(np.fft.rfft(m_a[:, 0]))
+        Y = np.abs(np.fft.rfft(m_a[:, 1]))
+        Z = np.abs(np.fft.rfft(m_a[:, 2]))
 
         if not X_acc:
             X_acc = X
@@ -53,4 +59,9 @@ def run_fft(realspace_motion_parts, dt):
     save_raw_fft(E_vector, X_acc, Y_acc, Z_acc, YZ_acc)
 
     # Time to smooth the data
+    # @TODO: Implement smoothing
 
+    E_res_index = round(E_res / (f * hbar / (meV * NFFT)))
+    L = len(YZ_acc)
+
+    return X, Y, Z, freqs

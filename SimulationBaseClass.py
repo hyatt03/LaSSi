@@ -3,7 +3,7 @@
 
 import matplotlib
 
-matplotlib.use('agg')
+matplotlib.use('Qt5Agg')
 # matplotlib.rcParams['agg.path.chunksize'] = 1000
 
 from Particles import handle_molecule_from_file, handle_molecule_from_ase
@@ -71,7 +71,8 @@ class BaseSimulation(object):
         'pbc': None,                          # Support for periodic boundary,
                                               # specify which directions should be periodic
         'debug': False,                       # Select if debugging output is wanted
-        'anneal_T' : None
+        'anneal_T' : None,
+        'integrator': 'ad_bs'
     }
 
     datafile = None
@@ -206,7 +207,7 @@ class BaseSimulation(object):
         [I_aa_temp, energies, frequencies] = transform_on_q(q, self.options, self.constants, self.datatables, self.particles)
 
         row = self.transformtables[str(q)].row
-        for rowIndex in range(0, len(frequencies)):
+        for rowIndex in range(0, len(I_aa_temp[0])):
             row['energy'] = energies[rowIndex]
             row['frequency'] = frequencies[rowIndex]
             row['I_xx'] = np.abs(I_aa_temp[0][rowIndex])

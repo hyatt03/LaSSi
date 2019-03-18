@@ -3,6 +3,7 @@
 import numpy as np
 import pandas as pd
 import math
+h = 4.13566733e-15
 
 
 def cross(a, b):
@@ -46,3 +47,20 @@ def downsample(a, r):
     chunked = np.vstack((np.nanmax(b, axis=1), np.nanmin(b, axis=1))).reshape(-1, 1, order='F')
 
     return pd.DataFrame(chunked)[0]
+
+
+# Takes E in meV
+# Returns dt and N
+def calculate_dt_and_n(energy_min, energy_max):
+    # Convert energy to frequency using Plancks constant
+    f_min = energy_min / (h * 1e3)
+    f_max = energy_max / (h * 1e3)
+
+    # We need at least 1000 datapoints per revolution for the highest energy
+    dt = 1 / (f_max * 1e3)
+
+    # And we need at least 20 periods for the low energy
+    t_tot = 20 / f_min
+    n = t_tot / dt
+
+    return dt, n
