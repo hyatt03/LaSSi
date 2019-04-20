@@ -1,4 +1,10 @@
-from unittest import TestCase
+from pathlib import Path
+import sys
+
+p = Path(__file__).parents[1]
+sys.path.append(str(p.resolve()))
+
+import unittest
 from SimulationBaseClass import BaseSimulation
 from tempfile import mkdtemp
 from shutil import rmtree
@@ -6,7 +12,7 @@ import random
 import numpy as np
 
 
-class BasicFunctionalityTest(TestCase):
+class BasicFunctionalityTest(unittest.TestCase):
     def setUp(self):
         # Create temporary folder for data files
         self.tmpdir = mkdtemp()
@@ -127,3 +133,7 @@ class BasicFunctionalityTest(TestCase):
         # Check that all the atoms have two neighbours
         for a in self.sim.particles.atoms:
             self.assertEqual(len(a.neighbours), 2)
+
+
+if __name__ == '__main__':
+    unittest.main()

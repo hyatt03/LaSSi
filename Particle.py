@@ -43,6 +43,7 @@ class Particle(object):
     def current_position(self):
         return self.pos.copy()
 
+    # Sets the position in memory
     def set_position(self, theta, phi):
         self.theta = theta
         self.phi = phi
@@ -61,55 +62,108 @@ class Particle(object):
             if item != self.id:
                 self.B_eff += self.b_eff_p * neighbours[item].current_position()
 
-    def calculate_function_value(self, theta, phi):
+    # Evaluate the differential equation given a specific theta, phi and random field.
+    def calculate_function_value(self, theta, phi, b_rand=None):
         o, c, B = self.options, self.constants, self.B_eff
 
-        d_theta = c['gamma'] * (
-                o['l'] * (sin(phi) * B[1] + B[0] * cos(phi)) * cos(theta) -
-                B[2] * o['l'] * sin(theta) +
-                sin(phi) * B[0] - B[1] * cos(phi)
-        )
+        # Check if a random field is passed in, only works using linear methods
+        # When using Runge-Kutta, we integrate this seperately
+        if b_rand is not None:
+            b, u, v = b_rand
+        else:
+            b, u, v = 0, 0, 0
 
-        d_phi = (c['gamma'] / (sin(theta)) ** 2.0) * (
-            (sin(phi) * B[1] + B[0] * cos(phi)) * cos(theta) -
-            o['l'] * (sin(phi) * B[0] - B[1] * cos(phi)) * sin(theta) +
-            B[2] * (cos(theta) ** 2.0) - B[2]
-        )
+        # Evaluate the difference in theta
+        d_theta = (B[0] * cos(theta) * cos(phi) * c['gamma'] * o['l'] +
+                   B[1] * cos(theta) * sin(phi) * c['gamma'] * o['l'] -
+                   c['gamma'] * cos(phi) * sin(u) * sin(v) * b +
+                   sin(phi) * cos(v) * sin(u) * b * c['gamma'] -
+                   B[2] * sin(theta) * c['gamma'] * o['l'] +
+                   B[0] * sin(phi) * c['gamma'] -
+                   B[1] * c['gamma'] * cos(phi))
+
+        # Evaluate the difference in phi
+        d_phi = (B[0] * c['gamma'] * (cos(phi) ** 2.) * o['l'] / (sin(theta) * sin(phi)) +
+                 cos(phi) * c['gamma'] * B[1] * o['l'] / sin(theta) +
+                 c['gamma'] * cos(theta) * sin(u) * sin(v) * b / (sin(theta) * sin(phi)) -
+                 c['gamma'] * cos(u) * b -
+                 B[2] * c['gamma'] -
+                 B[0] * c['gamma'] * o['l'] / (sin(theta) * sin(phi)) +
+                 B[1] * c['gamma'] * cos(theta) / (sin(theta) * sin(phi)) -
+                 cos(theta) * (cos(phi) ** 2.) * c['gamma'] * sin(u) * sin(v) * b / (sin(theta) * sin(phi)) +
+                 c['gamma'] * cos(theta) * cos(phi) * cos(v) * sin(u) * b / sin(theta) +
+                 c['gamma'] * B[0] * cos(theta) * cos(phi) / sin(theta) -
+                 B[1] * c['gamma'] * cos(theta) * (cos(phi) ** 2.) / (sin(theta) * sin(phi)))
 
         return d_theta, d_phi
 
-    def fifth_ad_bs_step(self, theta, phi):
-        d_ftheta, d_fphi = self.calculate_function_value(theta, phi)
+    # Evaluate the fifth step using function values from the past 4 steps
+    def fifth_ad_bs_step(self, theta, phi, b_rand):
+        d_ftheta, d_fphi = self.calculate_function_value(theta, phi, b_rand)
         return ab[0]*d_ftheta - ab[1]*self.stheta4 + ab[2]*self.stheta3 - ab[3]*self.stheta2 + ab[4]*self.stheta1, \
                ab[0]*d_fphi - ab[1]*self.sphi4 + ab[2]*self.sphi3 - ab[3]*self.sphi2 + ab[4]*self.sphi1, \
                d_ftheta, \
                d_fphi
 
-    def fourth_ad_bs_step(self, theta, phi):
-        d_ftheta, d_fphi = self.calculate_function_value(theta, phi)
+    # Evaluate the fourth step using function values from the past 3 steps
+    def fourth_ad_bs_step(self, theta, phi, b_rand):
+        d_ftheta, d_fphi = self.calculate_function_value(theta, phi, b_rand)
         return (55/24) * d_ftheta - (59/24) * self.stheta4 + (37/24) * self.stheta3 - (9/24) * self.stheta2, \
                (55/24) * d_fphi - (59/24) * self.sphi4 + (37/24) * self.sphi3 - (9/24) * self.sphi2, \
                d_ftheta, \
                d_fphi
 
-    def third_ad_bs_step(self, theta, phi):
-        d_ftheta, d_fphi = self.calculate_function_value(theta, phi)
+    # Evaluate the third step using function values from the past 2 steps
+    def third_ad_bs_step(self, theta, phi, b_rand):
+        d_ftheta, d_fphi = self.calculate_function_value(theta, phi, b_rand)
         return (23/12) * d_ftheta - (16/12) * self.stheta4 + (5/12) * self.stheta3, \
                (23/12) * d_fphi - (16/12) * self.sphi4 + (5/12) * self.sphi3, \
                d_ftheta, \
                d_fphi
 
-
-    def second_ad_bs_step(self, theta, phi):
-        d_ftheta, d_fphi = self.calculate_function_value(theta, phi)
+    # Evaluate the second step using function values from the past step
+    def second_ad_bs_step(self, theta, phi, b_rand):
+        d_ftheta, d_fphi = self.calculate_function_value(theta, phi, b_rand)
         return (3/2) * d_ftheta - (1/2) * self.stheta4, \
                (3/2) * d_fphi - (1/2) * self.sphi4, \
                d_ftheta, \
                d_fphi
 
-    def first_ad_bs_step(self, theta, phi):
-        return self.calculate_function_value(theta, phi)
+    # Evaluate the first step (basically forward Euler)
+    def first_ad_bs_step(self, theta, phi, b_rand):
+        return self.calculate_function_value(theta, phi, b_rand)
 
+    # Integrate one step using third order Adams Bashforth
+    # This is a linear multistep method (https://en.wikipedia.org/wiki/Linear_multistep_method)
+    def ad3_step(self, b_rand):
+        # Grab the constants
+        o, c = self.options, self.constants
+        theta, phi = self.theta, self.phi
+
+        # Gradually increase steps in the Adams Bashforth method
+        if self.sphi4 is None:
+            d_stheta, d_sphi = self.first_ad_bs_step(theta, phi, b_rand)
+            d_ftheta, d_fphi = d_stheta, d_sphi
+        elif self.sphi3 is None:
+            d_stheta, d_sphi, d_ftheta, d_fphi = self.second_ad_bs_step(theta, phi, b_rand)
+        else:
+            d_stheta, d_sphi, d_ftheta, d_fphi = self.third_ad_bs_step(theta, phi, b_rand)
+
+        # Move the values along so we keep continuing
+        self.stheta4, self.stheta3, self.stheta2, self.stheta1 = d_ftheta, self.stheta4, self.stheta3, self.stheta2
+        self.sphi4, self.sphi3, self.sphi2, self.sphi1 = d_fphi, self.sphi4, self.sphi3, self.sphi2
+
+        # Take the step and calculate the final position
+        theta += d_stheta * o['dt']
+        phi += d_sphi * o['dt']
+
+        # Save the data to the atom
+        p = self.set_position(theta, phi)
+
+        return self.id, p
+
+    # Integrate one step using fifth order Adams Bashforth
+    # This is a linear multistep method (https://en.wikipedia.org/wiki/Linear_multistep_method)
     def ad_bs_step(self, b_rand):
         # Grab the constants
         o, c = self.options, self.constants
@@ -117,34 +171,33 @@ class Particle(object):
 
         # Gradually increase steps in the Adams Bashforth method
         if self.sphi4 is None:
-            d_stheta, d_sphi = self.first_ad_bs_step(theta, phi)
+            d_stheta, d_sphi = self.first_ad_bs_step(theta, phi, b_rand)
             d_ftheta, d_fphi = d_stheta, d_sphi
         elif self.sphi3 is None:
-            d_stheta, d_sphi, d_ftheta, d_fphi = self.second_ad_bs_step(theta, phi)
+            d_stheta, d_sphi, d_ftheta, d_fphi = self.second_ad_bs_step(theta, phi, b_rand)
         elif self.sphi2 is None:
-            d_stheta, d_sphi, d_ftheta, d_fphi = self.third_ad_bs_step(theta, phi)
+            d_stheta, d_sphi, d_ftheta, d_fphi = self.third_ad_bs_step(theta, phi, b_rand)
         elif self.sphi1 is None:
-            d_stheta, d_sphi, d_ftheta, d_fphi = self.fourth_ad_bs_step(theta, phi)
+            d_stheta, d_sphi, d_ftheta, d_fphi = self.fourth_ad_bs_step(theta, phi, b_rand)
         else:
-            d_stheta, d_sphi, d_ftheta, d_fphi = self.fifth_ad_bs_step(theta, phi)
+            d_stheta, d_sphi, d_ftheta, d_fphi = self.fifth_ad_bs_step(theta, phi, b_rand)
 
         # Move the values along so we keep continuing
         self.stheta4, self.stheta3, self.stheta2, self.stheta1 = d_ftheta, self.stheta4, self.stheta3, self.stheta2
         self.sphi4, self.sphi3, self.sphi2, self.sphi1 = d_fphi, self.sphi4, self.sphi3, self.sphi2
 
-        # Take the step
-        d_theta = d_stheta * o['dt']
-        d_phi = d_sphi * o['dt']
-
-        # Calculate the final position
-        theta += d_theta  # + d_spin_rand_theta
-        phi += d_phi  # + d_spin_rand_phi
+        # Take the step and calculate the final position
+        theta += d_stheta * o['dt']
+        phi += d_sphi * o['dt']
 
         # Save the data to the atom
         p = self.set_position(theta, phi)
 
         return self.id, p
 
+    # Integrate one step using second order Runge-Kutta (https://en.wikipedia.org/wiki/Runge%E2%80%93Kutta_methods)
+    # This is a nonlinear method as it using partial time steps
+    # This integrator does not have energy conservation for some systems
     def take_rk2_step(self, b_rand):
         # Get the current position
         o, c = self.options, self.constants
@@ -177,6 +230,9 @@ class Particle(object):
 
         return self.id, p
 
+    # Integrate one step using fourth order Runge-Kutta (https://en.wikipedia.org/wiki/Runge%E2%80%93Kutta_methods)
+    # This is a nonlinear method as it using partial time steps
+    # This integrator does not have energy conservation for some systems
     def take_rk4_step(self, b_rand):
         # Get the current position
         o, c = self.options, self.constants

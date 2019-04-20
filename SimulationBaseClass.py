@@ -47,7 +47,8 @@ class BaseSimulation(object):
         'mu_b': 9.274009994e-24,
         'hbar': 1.054571800e-34,
         'Hz_to_meV': 4.135665538536e-12,
-        'mu_b_meV': 5.7883818012e-2
+        'mu_b_meV': 5.7883818012e-2,
+        'gamma': -1.760859644e11
     }
 
     # Simulation options
@@ -87,8 +88,7 @@ class BaseSimulation(object):
     particles = None
 
     def __init__(self):
-        """Initiates the class with required constants and options."""
-        self.constants['gamma'] = (self.constants['g'] * self.constants['mu_b']) / self.constants['hbar']
+        pass
 
     def load_particles(self, molecule = None):
         if molecule is not None:

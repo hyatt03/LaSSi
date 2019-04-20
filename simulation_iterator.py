@@ -38,6 +38,8 @@ def simulation_iterator(options, constants, particles, iterations, tables, i_0 =
             if o['integrator'] == 'ad_bs':
                 # Adams Bashforth method, 5th order, both numerically and energetically stable, but not great accuracy.
                 id, pos = particle.ad_bs_step(b_rand_sph)
+            elif o['integrator'] == 'ad3':
+                id, pos = particle.ad3_step(b_rand_sph)
             elif o['integrator'] == 'RK4':
                 # Fourth order Runge Kutta, pretty common method, but not stable in energy
                 id, pos = particle.take_rk4_step(b_rand_sph)

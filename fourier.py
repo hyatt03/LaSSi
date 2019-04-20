@@ -18,9 +18,7 @@ def transform_on_q(q, options, constants, timeseries, particles):
 
     # Sum over each particle
     for tablename, table in timeseries.items():
-        print('get atom from tablename')
         particle = particles.get_atom_from_tablename(tablename)
-        print('positions')
         positions = [
             table.cols.pos_x,
             table.cols.pos_y,
@@ -28,12 +26,9 @@ def transform_on_q(q, options, constants, timeseries, particles):
         ]
 
         transformed = [[], [], []]
-
-        print('dot p')
         q_dot_lattice = cmath.exp(-1j * dot(q, particle.lattice_position))
 
         for z in range(0, 3):
-            print('prep')
             # Sum over scattering vector dotted the particles lattice position
             sum_A[z] += positions[z][0] * q_dot_lattice
 
@@ -44,12 +39,9 @@ def transform_on_q(q, options, constants, timeseries, particles):
             while len(fft_data) < (2 ** (len(fft_data) - 1).bit_length()):
                 fft_data.append(0)
 
-            print('about to do fft')
-
             # Execute the transform
             Y = np.abs(np.fft.fft(fft_data))
 
-            print('did fft')
             # Calculate the intensities
             # sampled = downsample(Y, 50000)
             sampled = Y
@@ -74,8 +66,6 @@ def transform_on_q(q, options, constants, timeseries, particles):
                     sum_B[z].append(0)
 
                 sum_B[z][idx] += transformed[z][idx]
-
-            print('did rest')
 
     I_aa_temp = [
         [],  # xx
