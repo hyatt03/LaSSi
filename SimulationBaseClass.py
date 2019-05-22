@@ -11,7 +11,7 @@ from annealing import anneal_particles
 from simulation_iterator import simulation_iterator
 from TimeSeriesDescriptor import TimeSeriesDescriptor
 from TransformsDescriptor import TransformsDescriptor
-from fourier import transform_on_q
+from fourier import transform_on_q, transform_on_q_2
 
 from tables import open_file, NaturalNameWarning
 import numpy as np
@@ -204,7 +204,8 @@ class BaseSimulation(object):
         tabledescription = 'Cross section for q = {}'.format(str(q))
         self.transformtables[str(q)] = self.transformfile.create_table(self.transformgroup, str(q), TransformsDescriptor, tabledescription)
 
-        [I_aa_temp, energies, frequencies] = transform_on_q(q, self.options, self.constants, self.datatables, self.particles)
+        I_aa_temp, energies, frequencies = transform_on_q_2(q, self.options, self.constants, self.datatables, self.particles)
+        # [I_aa_temp, energies, frequencies] = transform_on_q(q, self.options, self.constants, self.datatables, self.particles)
 
         row = self.transformtables[str(q)].row
         for rowIndex in range(0, len(I_aa_temp[0])):

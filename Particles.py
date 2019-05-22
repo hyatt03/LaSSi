@@ -86,8 +86,6 @@ class Particles(object):
 
             self.atoms.append(Particle(id, atom, self.N_atoms, closest_neighbour_indexes, self.options, self.constants))
 
-            # TODO: Add support for initial conditions
-
     def __iter__(self):
         return self
 
