@@ -6,7 +6,15 @@ import numpy as np
 
 
 def anneal_particles(options, constants, particles, steps):
-    T_stair_steps = np.linspace(0, options['T'] * 10, num = steps)[::-1]
+    prior_temperature = options['T']
+    anneal_T = options['T']
+
+    if options['anneal_T']:
+        # Necessary to start at much higher temperature when not using the optional parameter anneal_T
+        anneal_T = options['anneal_T'] / 10
+
+    # Creates an array of temperatures that we want to anneal through
+    T_stair_steps = np.linspace(anneal_T * 10, 0, num = steps)
 
     for T in T_stair_steps:
         options['T'] = T
@@ -22,5 +30,7 @@ def anneal_particles(options, constants, particles, steps):
 
         for particle in particles:
             particle.take_RK4_step(b_rand_sph)
+
+    options['T'] = prior_temperature
 
     return particles

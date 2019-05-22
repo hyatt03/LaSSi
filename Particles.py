@@ -72,7 +72,7 @@ class Particles(object):
 
                     # Compute the nearest neighbours
                     closest_atom = distances_frame.iloc[0]
-                    for i in range(0, self.N_atoms):
+                    for i in range(len(distances)):
                         neighbour_id = int(distances_frame.iloc[i][0])
                         if math.fabs(distances_frame.iloc[i][1] - closest_atom[1]) < options['minimum_delta'] and \
                                 neighbour_id not in closest_neighbour_indexes:
@@ -219,3 +219,7 @@ def handle_molecule_from_file(options, constants):
         die('Input filetype not supported. Supported types: {}'.format(allowed_formats))
 
     return Particles(ase.io.read(str(options['input_file'])), options, constants)
+
+
+def handle_molecule_from_ase(options, constants, molecule):
+    return Particles(molecule, options, constants)

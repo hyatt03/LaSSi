@@ -4,14 +4,15 @@ import math
 import random
 import sys
 
-def simulation_iterator(options, constants, particles, iterations, tables):
+
+def simulation_iterator(options, constants, particles, iterations, tables, i_0 = 1):
     o, c = options, constants
     sigma = math.sqrt(2 * o['l'] * c['k_b'] * o['T'] * c['hbar'] * o['dt'] / \
           ((c['g'] * c['mu_b']) ** 2 * o['spin']))
 
     # Begin simulation
     perc = 0
-    for i in range(1, int(iterations) + 1):
+    for i in range(i_0, int(iterations) + i_0):
         progress = int(100 * i / iterations)
         if  options['debug'] and progress > perc:
             # print('Size of timeseries: {}, at {} iterations'.format(sys.getsizeof(timeseries), i))
@@ -33,9 +34,25 @@ def simulation_iterator(options, constants, particles, iterations, tables):
             tablename = 'p{}'.format(particle.id)
             tablerow = tables[tablename].row
 
-            id, pos = particle.take_RK4_step(b_rand_sph)
+            # Take a step
+            if o['integrator'] == 'ad_bs':
+                # Adams Bashforth method, 5th order, both numerically and energetically stable, but not great accuracy.
+                id, pos = particle.ad_bs_step(b_rand_sph)
+            elif o['integrator'] == 'ad3':
+                id, pos = particle.ad3_step(b_rand_sph)
+            elif o['integrator'] == 'RK4':
+                # Fourth order Runge Kutta, pretty common method, but not stable in energy
+                id, pos = particle.take_rk4_step(b_rand_sph)
+            elif o['integrator'] == 'RK2':
+                # Also known as the midpoint method
+                id, pos = particle.take_rk2_step(b_rand_sph)
+            else:
+                raise ValueError('Invalid integrator, use ad_bs or RK4 in simulation options')
+
+            # Get the energy of the particle
             energy = particle.get_energy(particles.atoms)
 
+            # Save the data to hdf5
             tablerow['t'] = i * o['dt']
             tablerow['pos_x'] = pos[0]
             tablerow['pos_y'] = pos[1]

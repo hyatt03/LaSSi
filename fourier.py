@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import scipy.fftpack as sci
 import numpy as np
 from utils import dot
 import cmath
@@ -27,7 +26,6 @@ def transform_on_q(q, options, constants, timeseries, particles):
         ]
 
         transformed = [[], [], []]
-
         q_dot_lattice = cmath.exp(-1j * dot(q, particle.lattice_position))
 
         for z in range(0, 3):
@@ -42,7 +40,7 @@ def transform_on_q(q, options, constants, timeseries, particles):
                 fft_data.append(0)
 
             # Execute the transform
-            Y = sci.fft(fft_data)
+            Y = np.abs(np.fft.fft(fft_data))
 
             # Calculate the intensities
             # sampled = downsample(Y, 50000)
@@ -54,9 +52,8 @@ def transform_on_q(q, options, constants, timeseries, particles):
             fourier_temp[1:] = 2 * fourier_temp[1:]
 
             # Calculate the frequencies and energies these intensities correspond to
-            L = float(L)
-            frequency = [float(x) / (L * o['dt']) for x in np.arange(0, L / 2 - 1, (L - 1) / L)]
-            energy = [x * c['Hz_to_meV'] for x in frequency]
+            frequency = np.fft.fftfreq(len(fft_data), o['dt'])
+            energy = c['Hz_to_meV'] * frequency
 
             transformed[z] = fourier_temp
             energies = energy
