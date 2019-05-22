@@ -10,6 +10,7 @@ from utils import dot, to_sph, to_cart
 
 ab = [1901 / 720, 2774 / 720, 2616 / 720, 1274 / 720, 251 / 720]
 
+
 class Particle(object):
     def __init__(self, id, atom, N, neighbours, options, constants):
         self.id = id
@@ -74,58 +75,71 @@ class Particle(object):
             b, u, v = 0, 0, 0
 
         # Evaluate the difference in theta
-        d_theta = (B[0] * cos(theta) * cos(phi) * c['gamma'] * o['l'] +
-                   B[1] * cos(theta) * sin(phi) * c['gamma'] * o['l'] -
-                   c['gamma'] * cos(phi) * sin(u) * sin(v) * b +
-                   sin(phi) * cos(v) * sin(u) * b * c['gamma'] -
-                   B[2] * sin(theta) * c['gamma'] * o['l'] +
-                   B[0] * sin(phi) * c['gamma'] -
-                   B[1] * c['gamma'] * cos(phi))
+        d_theta = c['gamma'] * (
+            B[0] * o['l'] * cos(theta) * cos(phi) +
+            B[1] * o['l'] * sin(phi) * cos(theta) -
+            B[2] * o['l'] * sin(theta) +
+            B[0] * sin(phi) -
+            B[1] * cos(phi) +
+            b * cos(v) * sin(u) * sin(phi) -
+            b * sin(u) * sin(v) * cos(phi)
+        )
+
+        # Handle edge case
+        try:
+            stheta_sphi = 1 / (sin(theta) * sin(phi))
+        except ZeroDivisionError:
+            stheta_sphi = 1 / 0.00000000001  # Small number
 
         # Evaluate the difference in phi
-        d_phi = (B[0] * c['gamma'] * (cos(phi) ** 2.) * o['l'] / (sin(theta) * sin(phi)) +
-                 cos(phi) * c['gamma'] * B[1] * o['l'] / sin(theta) +
-                 c['gamma'] * cos(theta) * sin(u) * sin(v) * b / (sin(theta) * sin(phi)) -
-                 c['gamma'] * cos(u) * b -
-                 B[2] * c['gamma'] -
-                 B[0] * c['gamma'] * o['l'] / (sin(theta) * sin(phi)) +
-                 B[1] * c['gamma'] * cos(theta) / (sin(theta) * sin(phi)) -
-                 cos(theta) * (cos(phi) ** 2.) * c['gamma'] * sin(u) * sin(v) * b / (sin(theta) * sin(phi)) +
-                 c['gamma'] * cos(theta) * cos(phi) * cos(v) * sin(u) * b / sin(theta) +
-                 c['gamma'] * B[0] * cos(theta) * cos(phi) / sin(theta) -
-                 B[1] * c['gamma'] * cos(theta) * (cos(phi) ** 2.) / (sin(theta) * sin(phi)))
+        d_phi = c['gamma'] * stheta_sphi * (
+            - B[0] * o['l'] * (cos(theta) ** 2.) * (cos(phi) ** 2.)
+            - B[1] * o['l'] * cos(phi) * sin(phi) * (cos(theta) ** 2.)
+            + B[2] * o['l'] * cos(theta) * cos(phi) * sin(theta)
+            + B[0] * o['l'] * (cos(phi) ** 2.)
+            + B[1] * o['l'] * cos(phi) * sin(phi)
+            - B[0] * o['l']
+            - b * cos(u) * sin(phi) * sin(theta)
+            + b * cos(theta) * sin(u) * sin(v)
+            - B[2] * sin(phi) * sin(theta)
+            + B[1] * cos(theta)
+            + (d_theta * cos(phi) * cos(theta) / c['gamma'])
+        )
 
         return d_theta, d_phi
 
     # Evaluate the fifth step using function values from the past 4 steps
     def fifth_ad_bs_step(self, theta, phi, b_rand):
-        d_ftheta, d_fphi = self.calculate_function_value(theta, phi, b_rand)
-        return ab[0]*d_ftheta - ab[1]*self.stheta4 + ab[2]*self.stheta3 - ab[3]*self.stheta2 + ab[4]*self.stheta1, \
-               ab[0]*d_fphi - ab[1]*self.sphi4 + ab[2]*self.sphi3 - ab[3]*self.sphi2 + ab[4]*self.sphi1, \
-               d_ftheta, \
-               d_fphi
+        d_ft, d_fp = self.calculate_function_value(theta, phi, b_rand)
+
+        # New weighted d_stheta and d_sphi
+        dt = ab[0] * d_ft - ab[1] * self.stheta4 + ab[2] * self.stheta3 - ab[3] * self.stheta2 + ab[4] * self.stheta1
+        dp = ab[0] * d_fp - ab[1] * self.sphi4 + ab[2] * self.sphi3 - ab[3] * self.sphi2 + ab[4] * self.sphi1
+
+        # Return d_stheta, d_sphi as well as the function values
+        return dt, dp, d_ft, d_fp
 
     # Evaluate the fourth step using function values from the past 3 steps
     def fourth_ad_bs_step(self, theta, phi, b_rand):
         d_ftheta, d_fphi = self.calculate_function_value(theta, phi, b_rand)
-        return (55/24) * d_ftheta - (59/24) * self.stheta4 + (37/24) * self.stheta3 - (9/24) * self.stheta2, \
-               (55/24) * d_fphi - (59/24) * self.sphi4 + (37/24) * self.sphi3 - (9/24) * self.sphi2, \
+        return (55 / 24) * d_ftheta - (59 / 24) * self.stheta4 + (37 / 24) * self.stheta3 - (9 / 24) * self.stheta2, \
+               (55 / 24) * d_fphi - (59 / 24) * self.sphi4 + (37 / 24) * self.sphi3 - (9 / 24) * self.sphi2, \
                d_ftheta, \
                d_fphi
 
     # Evaluate the third step using function values from the past 2 steps
     def third_ad_bs_step(self, theta, phi, b_rand):
         d_ftheta, d_fphi = self.calculate_function_value(theta, phi, b_rand)
-        return (23/12) * d_ftheta - (16/12) * self.stheta4 + (5/12) * self.stheta3, \
-               (23/12) * d_fphi - (16/12) * self.sphi4 + (5/12) * self.sphi3, \
+        return (23 / 12) * d_ftheta - (16 / 12) * self.stheta4 + (5 / 12) * self.stheta3, \
+               (23 / 12) * d_fphi - (16 / 12) * self.sphi4 + (5 / 12) * self.sphi3, \
                d_ftheta, \
                d_fphi
 
     # Evaluate the second step using function values from the past step
     def second_ad_bs_step(self, theta, phi, b_rand):
         d_ftheta, d_fphi = self.calculate_function_value(theta, phi, b_rand)
-        return (3/2) * d_ftheta - (1/2) * self.stheta4, \
-               (3/2) * d_fphi - (1/2) * self.sphi4, \
+        return (3 / 2) * d_ftheta - (1 / 2) * self.stheta4, \
+               (3 / 2) * d_fphi - (1 / 2) * self.sphi4, \
                d_ftheta, \
                d_fphi
 
@@ -209,7 +223,7 @@ class Particle(object):
         d_theta2, d_phi2 = self.calculate_function_value(theta + d_theta1 * o['dt'] / 2, phi + d_phi1 * o['dt'] / 2)
 
         # Calculate the total difference in the spin
-        d_theta = d_theta2  * o['dt']
+        d_theta = d_theta2 * o['dt']
         d_phi = d_phi2 * o['dt']
 
         # Calculate the random energy added
@@ -265,6 +279,21 @@ class Particle(object):
         # Save the data to the atom
         p = self.set_position(theta, phi)
 
+        return self.id, p
+
+    def take_euler_step(self, b_rand):
+        # Calculate function value
+        theta, phi = self.theta, self.phi
+        d_stheta, d_sphi = self.calculate_function_value(theta, phi, b_rand)
+
+        # Take the step and calculate the final position
+        theta += d_stheta * self.options['dt']
+        phi += d_sphi * self.options['dt']
+
+        # Save the data to the atom
+        p = self.set_position(theta, phi)
+
+        # Return some info
         return self.id, p
 
     # Calculate energy using hamiltonian

@@ -5,17 +5,16 @@ import random
 import sys
 
 
-def simulation_iterator(options, constants, particles, iterations, tables, i_0 = 1):
+def simulation_iterator(options, constants, particles, iterations, tables, i_0=1):
     o, c = options, constants
-    sigma = math.sqrt(2 * o['l'] * c['k_b'] * o['T'] * c['hbar'] * o['dt'] / \
-          ((c['g'] * c['mu_b']) ** 2 * o['spin']))
+    sigma = math.sqrt(2 * o['l'] * c['k_b'] * o['T'] * c['hbar'] * o['dt'] /
+                      ((c['g'] * c['mu_b']) ** 2 * o['spin']))
 
     # Begin simulation
     perc = 0
     for i in range(i_0, int(iterations) + i_0):
         progress = int(100 * i / iterations)
-        if  options['debug'] and progress > perc:
-            # print('Size of timeseries: {}, at {} iterations'.format(sys.getsizeof(timeseries), i))
+        if options['debug'] and progress > perc:
             perc = progress
             print('Simulating {0}%\r'.format(perc))
             sys.stdout.flush()
@@ -46,6 +45,8 @@ def simulation_iterator(options, constants, particles, iterations, tables, i_0 =
             elif o['integrator'] == 'RK2':
                 # Also known as the midpoint method
                 id, pos = particle.take_rk2_step(b_rand_sph)
+            elif o['integrator'] == 'euler':
+                id, pos = particle.take_euler_step(b_rand_sph)
             else:
                 raise ValueError('Invalid integrator, use ad_bs or RK4 in simulation options')
 
