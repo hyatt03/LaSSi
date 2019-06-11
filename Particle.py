@@ -74,36 +74,37 @@ class Particle(object):
         else:
             b, u, v = 0, 0, 0
 
-        # Evaluate the difference in theta
-        d_theta = c['gamma'] * (
-            B[0] * o['l'] * cos(theta) * cos(phi) +
-            B[1] * o['l'] * sin(phi) * cos(theta) -
-            B[2] * o['l'] * sin(theta) +
-            B[0] * sin(phi) -
-            B[1] * cos(phi) +
-            b * cos(v) * sin(u) * sin(phi) -
-            b * sin(u) * sin(v) * cos(phi)
-        )
-
         # Handle edge case
         try:
-            stheta_sphi = 1 / (sin(theta) * sin(phi))
+            stheta = 1 / sin(theta)
         except ZeroDivisionError:
-            stheta_sphi = 1 / 0.00000000001  # Small number
+            stheta = 1 / 1e-20  # Small number
+
+        try:
+            cphi = 1 / cos(phi)
+        except ZeroDivisionError:
+            cphi = 1 / 1e-20
+
+        stheta_cphi = stheta * cphi
+
+        # Evaluate the difference in theta
+        d_theta = stheta * c['gamma'] * sin(theta) * ((-b * sin(u) * sin(v) + B[0] * o['l'] * cos(theta) - B[1]) * cos(phi)
+                                               + (b * sin(u) * cos(v) + B[1] * o['l'] * cos(theta) + B[0]) * sin(phi)
+                                               - B[2] * sin(theta) * o['l'])
 
         # Evaluate the difference in phi
-        d_phi = c['gamma'] * stheta_sphi * (
-            - B[0] * o['l'] * (cos(theta) ** 2.) * (cos(phi) ** 2.)
-            - B[1] * o['l'] * cos(phi) * sin(phi) * (cos(theta) ** 2.)
-            + B[2] * o['l'] * cos(theta) * cos(phi) * sin(theta)
-            + B[0] * o['l'] * (cos(phi) ** 2.)
-            + B[1] * o['l'] * cos(phi) * sin(phi)
-            - B[0] * o['l']
-            - b * cos(u) * sin(phi) * sin(theta)
-            + b * cos(theta) * sin(u) * sin(v)
-            - B[2] * sin(phi) * sin(theta)
-            + B[1] * cos(theta)
-            + (d_theta * cos(phi) * cos(theta) / c['gamma'])
+        d_phi = c['gamma'] * stheta_cphi * (
+            + B[0] * o['l'] * cos(phi) * sin(phi) * (cos(theta) ** 2.)
+            - B[1] * o['l'] * (cos(phi) ** 2.) * (cos(theta) ** 2.)
+            - B[2] * o['l'] * cos(theta) * sin(phi) * sin(theta)
+            - B[0] * o['l'] * cos(phi) * sin(phi)
+            + B[1] * o['l'] * (cos(phi) ** 2.)
+            + B[1] * o['l'] * (cos(theta) ** 2.)
+            - b * cos(u) * cos(phi) * sin(theta)
+            + b * cos(theta) * sin(u) * cos(v)
+            - B[2] * cos(phi) * sin(theta)
+            + B[0] * cos(theta)
+            - (d_theta * sin(phi) * cos(theta) / c['gamma'])
         )
 
         return d_theta, d_phi
@@ -229,11 +230,11 @@ class Particle(object):
         # Calculate the random energy added
         # This is based on temperature
         d_spin_rand_theta = (-math.sin(b_theta) * math.sin(b_phi) * math.cos(phi) +
-                             math.sin(b_theta) * math.cos(b_phi) * math.sin(phi)) * c['gamma'] * b_mag
+                             math.sin(b_theta) * math.cos(b_phi) * math.sin(phi)) * c['gamma'] * b_mag * o['dt']
 
-        d_spin_rand_phi = ((math.sin(phi) * math.sin(b_theta) * math.sin(b_phi) +
-                            math.sin(b_theta) * math.cos(b_phi) * math.cos(phi)) * math.cos(theta) -
-                           math.cos(b_theta) * math.sin(theta)) * c['gamma'] * b_mag / math.sin(theta)
+        d_spin_rand_phi = o['dt'] * ((math.sin(phi) * math.sin(b_theta) * math.sin(b_phi) +
+                                      math.sin(b_theta) * math.cos(b_phi) * math.cos(phi)) * math.cos(theta) -
+                                      math.cos(b_theta) * math.sin(theta)) * c['gamma'] * b_mag / math.sin(theta)
 
         # Calculate the final position
         theta += d_theta + d_spin_rand_theta
@@ -273,8 +274,8 @@ class Particle(object):
                            math.cos(b_theta) * math.sin(theta)) * c['gamma'] * b_mag / math.sin(theta)
 
         # Calculate the final position
-        theta += d_theta + d_spin_rand_theta
-        phi += d_phi + d_spin_rand_phi
+        theta += d_theta + d_spin_rand_theta * o['dt']
+        phi += d_phi + d_spin_rand_phi * o['dt']
 
         # Save the data to the atom
         p = self.set_position(theta, phi)
