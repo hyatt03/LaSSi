@@ -20,6 +20,7 @@ class Particles(object):
         self.atoms = []
         self.current = 0
         self.shape = ase.geometry.crystal_structure_from_cell(molecule.get_cell())
+        self.ase = molecule
 
         if self.options['debug']:
             print('Loaded crystall with shape {} and {} atoms'.format(self.shape, len(molecule)))

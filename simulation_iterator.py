@@ -1,18 +1,20 @@
 # -*- coding: utf-8 -*-
 
 import math
-import random
 import sys
+import random
 
 
-def simulation_iterator(options, constants, particles, iterations, tables, i_0=1):
+def simulation_iterator(options, constants, particles, iterations, tables, i_0=0):
     o, c = options, constants
-    sigma = math.sqrt(2 * o['l'] * c['k_b'] * o['T'] * c['hbar'] * o['dt'] /
-                      ((c['g'] * c['mu_b']) ** 2 * o['spin']))
+    sigma = math.sqrt(2. * o['l'] * c['k_b'] * o['T'] * c['hbar'] /
+                      ((c['g'] * c['mu_b']) ** 2. * o['spin']))
 
     # Begin simulation
     perc = 0
-    for i in range(i_0, int(iterations) + i_0):
+    i = i_0
+    # Use a while loop so we can run on conditionals depending on i_0
+    while i <= iterations:
         progress = int(100 * i / iterations)
         if options['debug'] and progress > perc:
             perc = progress
@@ -31,7 +33,6 @@ def simulation_iterator(options, constants, particles, iterations, tables, i_0=1
         # Evaluate each particle to compute the next state
         for particle in particles.atoms:
             tablename = 'p{}'.format(particle.id)
-            tablerow = tables[tablename].row
 
             # Take a step
             if o['integrator'] == 'ad_bs':
@@ -53,17 +54,21 @@ def simulation_iterator(options, constants, particles, iterations, tables, i_0=1
             # Get the energy of the particle
             energy = particle.get_energy(particles.atoms)
 
-            # Save the data to hdf5
-            tablerow['t'] = i * o['dt']
-            tablerow['pos_x'] = pos[0]
-            tablerow['pos_y'] = pos[1]
-            tablerow['pos_z'] = pos[2]
-            tablerow['energy'] = energy
-            tablerow.append()
+            # Save the data to the buffer
+            tables[tablename].append([(
+                    i * o['dt'],  # t
+                    pos[0],  # x
+                    pos[1],  # y
+                    pos[2],  # z
+                    energy
+            )])
 
-            # Flush the data once in a while, increase to run faster (costs more memory)
-            if i % 10000 == 0:
+            # Flush the data to file once in a while, increase to run faster (costs more memory)
+            if i % 1e7 == 0:
                 tables[tablename].flush()
+
+        # Add to the counter
+        i += 1
 
     # Flush at the end of the simulation
     for particle in particles.atoms:
