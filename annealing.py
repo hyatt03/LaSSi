@@ -29,7 +29,7 @@ def anneal_particles(options, constants, particles, steps):
         b_rand_sph = (b_rand, u, v)
 
         for particle in particles:
-            particle.take_RK4_step(b_rand_sph)
+            particle.ad_bs_step(b_rand_sph)
 
     options['T'] = prior_temperature
 

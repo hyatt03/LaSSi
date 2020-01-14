@@ -1,83 +1,55 @@
 # -*- coding: utf-8 -*-
 
-import scipy.fftpack as sci
 import numpy as np
 from utils import dot
 import cmath
 
-
-def transform_on_q(q, options, constants, timeseries, particles):
+def transform_on_q(q, options, constants, timeseries, particles, fourier_length):
     o, c = options, constants
     if o['debug']:
         print('Computing intensities for q = [{}, {}, {}]'.format(q[0], q[1], q[2]))
 
-    sum_A = [0, 0, 0]
-    sum_B = [[], [], []]
+    # Sets the length to the next power of 2, for speed
+    I_aa = np.zeros((3, int(fourier_length / 2)), dtype=np.dtype('complex128'))
+    t_0 = 1
 
-    frequencies = []
-    energies = []
+    for z in range(0, 3):
+        for tablename, table in timeseries.items():
+            particle = particles.get_atom_from_tablename(tablename)
+            if type(table) is np.ndarray:
+                positions = table
+            else:
+                positions = np.array([
+                    table.cols.pos_x,
+                    table.cols.pos_y,
+                    table.cols.pos_z
+                ], dtype=np.complex128)
 
-    # Sum over each particle
-    for tablename, table in timeseries.items():
-        particle = particles.get_atom_from_tablename(tablename)
-        positions = [
-            table.cols.pos_x,
-            table.cols.pos_y,
-            table.cols.pos_z
-        ]
+            q_dot_lattice = cmath.exp(1j * dot(q, particle.lattice_position))
 
-        transformed = [[], [], []]
+            # Do the fourier transform and add it to the I_aa matrix
+            I_aa[z, :] += np.fft.fft(q_dot_lattice * positions[z].T[t_0:], n=fourier_length) \
+                            .reshape((fourier_length,))[:int(fourier_length/2)]
 
-        q_dot_lattice = cmath.exp(-1j * dot(q, particle.lattice_position))
+        ic_sum = 0
+        for tablename, table in timeseries.items():
+            particle = particles.get_atom_from_tablename(tablename)
+            if type(table) is np.ndarray:
+                positions = table
+            else:
+                positions = np.array([
+                    table.cols.pos_x,
+                    table.cols.pos_y,
+                    table.cols.pos_z
+                ], dtype=np.complex128)
 
-        for z in range(0, 3):
-            # Sum over scattering vector dotted the particles lattice position
-            sum_A[z] += positions[z][0] * q_dot_lattice
+            ic_sum += cmath.exp(-1j * dot(q, particle.lattice_position)) * positions[z, t_0]
 
-            # Prepare data for fourier transform
-            fft_data = [x * q_dot_lattice for x in positions[z]]
+        I_aa[z, :] *= ic_sum
+        I_aa[z, :] = np.power(np.abs(I_aa[z, :]), 2)
+        # I_aa[z, :] = np.real(I_aa[z, :])
 
-            # Pad the data with zeroes to speed up the transform
-            while len(fft_data) < (2 ** (len(fft_data) - 1).bit_length()):
-                fft_data.append(0)
+    frequencies = np.fft.fftfreq(fourier_length, o['dt'])[:int(fourier_length/2)]
+    energies = c['Hz_to_meV'] * frequencies
 
-            # Execute the transform
-            Y = sci.fft(fft_data)
-
-            # Calculate the intensities
-            # sampled = downsample(Y, 50000)
-            sampled = Y
-
-            L = len(sampled)
-            P2 = abs(sampled / L)
-            fourier_temp = P2[:int(L / 2)]
-            fourier_temp[1:] = 2 * fourier_temp[1:]
-
-            # Calculate the frequencies and energies these intensities correspond to
-            L = float(L)
-            frequency = [float(x) / (L * o['dt']) for x in np.arange(0, L / 2 - 1, (L - 1) / L)]
-            energy = [x * c['Hz_to_meV'] for x in frequency]
-
-            transformed[z] = fourier_temp
-            energies = energy
-            frequencies = frequency
-
-            # Sum over the intensities for each particle.
-            sum_length = len(sum_B[z])
-            for idx in range(0, len(fourier_temp)):
-                if sum_length <= idx:
-                    sum_B[z].append(0)
-
-                sum_B[z][idx] += transformed[z][idx]
-
-    I_aa_temp = [
-        [],  # xx
-        [],  # yy
-        []  # zz
-    ]
-
-    # Multiply the two components of the scattering intensities to compute the final intensity
-    for i in range(0, 3):
-        I_aa_temp[i] = sum_A[i] * np.array(sum_B[i])
-
-    return [np.array(I_aa_temp), energies, frequencies]
+    return I_aa, energies, frequencies

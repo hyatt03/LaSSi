@@ -1,3 +1,9 @@
+from pathlib import Path
+import sys
+
+p = Path(__file__).parents[1]
+sys.path.append(str(p.resolve()))
+
 import unittest
 from SimulationBaseClass import BaseSimulation
 from tempfile import mkdtemp

@@ -20,6 +20,7 @@ class Particles(object):
         self.atoms = []
         self.current = 0
         self.shape = ase.geometry.crystal_structure_from_cell(molecule.get_cell())
+        self.ase = molecule
 
         if self.options['debug']:
             print('Loaded crystall with shape {} and {} atoms'.format(self.shape, len(molecule)))
@@ -85,8 +86,6 @@ class Particles(object):
                     closest_neighbour_indexes.append(distances[0][0])
 
             self.atoms.append(Particle(id, atom, self.N_atoms, closest_neighbour_indexes, self.options, self.constants))
-
-            # TODO: Add support for initial conditions
 
     def __iter__(self):
         return self
