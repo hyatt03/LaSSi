@@ -35,7 +35,7 @@ class TwoSpinTest(unittest.TestCase):
         rmtree(self.tmpdir)
 
     def test_exchange_frequence_as_deviation_angle(self):
-        deviation_angles = np.array(list(range(0, 90))) * np.pi / 180
+        deviation_angles = np.array(list(range(30, 45, 5))) * np.pi / 180
 
         for idx, d_angle in enumerate(deviation_angles):
             # Start by setting the initial position of the spins
@@ -46,10 +46,10 @@ class TwoSpinTest(unittest.TestCase):
             self.sim.particles.atoms[1].set_position(theta2, phi2)
 
             # Next run the simulation
-            self.sim.run_simulation(2 ** 23)
+            self.sim.run_simulation(2 ** 24)
 
             # Run the transformation
-            # self.sim.run_transformations(np.array([0, 0, 0]))
+            self.sim.run_transformations(np.array([0, 0, 0]))
 
             # max_value_xx = max(self.sim.transformtables['[0 0 0]'].cols.I_xx)
             # max_value_yy = max(self.sim.transformtables['[0 0 0]'].cols.I_yy)
@@ -64,8 +64,9 @@ class TwoSpinTest(unittest.TestCase):
             # for row in self.sim.transformtables['[0 0 0]'].where('I_zz == {}'.format(max_value_zz)):
             #     print('I_zz', max_value_yy, ', d_theta =', d_angle, ', E = ', row['energy'])
 
-            # self.sim.plot_energies('data/two_spins_test/two_spin_E_{}_' + str(d_angle) + '.png', [0, 1])
-            self.sim.plot_spins_xyz('data/two_spins_test/two_spins_xyz_{}.png'.format(d_angle))
+            self.sim.plot_energies('data/two_spins_test/t_two_spin_E_{}_' + str(d_angle) + '.png')
+            plt.show()
+            # self.sim.plot_spins_xyz('data/two_spins_test/two_spins_xyz_{}.png'.format(d_angle))
 
             # Reset the simulation for the next angle
             plt.close('all')
