@@ -1,7 +1,7 @@
 <molecule>
  <atomArray>
-  <atom id="a1" elementType="Gd" x3="0.000000" y3="0.000000" z3="-1.000000"/>
-  <atom id="a2" elementType="Gd" x3="-0.0" y3="-0.866" z3="0.5"/>
-  <atom id="a3" elementType="Gd" x3="0.0" y3="0.866" z3="0.5"/>
+  <atom id="a1" elementType="Ni" x3="0.000000" y3="0.000000" z3="0.0"/>
+  <atom id="a2" elementType="Ni" x3="-0.153" y3="-0.26517" z3="0.0"/>
+  <atom id="a3" elementType="Ni" x3="0.153" y3="-0.26517" z3="0.0"/>
  </atomArray>
 </molecule>

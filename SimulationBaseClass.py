@@ -256,10 +256,6 @@ class BaseSimulation(object):
         # Run the actual transform
         I_aa_temp, energies, frequencies = transform_on_q(q, self.options, self.constants, self.datatables, self.particles, fourier_length)
 
-        # Normalize the intensities so we can compare them
-        for idx in range(len(I_aa_temp)):
-            I_aa_temp[idx] = self.normalize_intensity(I_aa_temp[idx])
-
         buffer = []
         for rowIndex in range(0, len(I_aa_temp[0])):
             buffer.append((energies[rowIndex],
@@ -288,7 +284,7 @@ class BaseSimulation(object):
                 self.datatables[key].cols.pos_x,
                 self.datatables[key].cols.pos_y,
                 self.datatables[key].cols.pos_z
-            ], dtype=np.complex128)
+            ])
 
         for q in qs:
             if not type(q) is np.ndarray:
@@ -315,10 +311,6 @@ class BaseSimulation(object):
             if I_aa_temp is None:
                 results_tables.append(self.transformtables[q_str])
             else:
-                # Normalize the intensities so we can compare them
-                for idx in range(len(I_aa_temp)):
-                    I_aa_temp[idx] = self.normalize_intensity(I_aa_temp[idx])
-
                 # Create the table
                 tabledescription = 'Cross section for q = {}'.format(q_str)
 
@@ -383,14 +375,15 @@ class BaseSimulation(object):
             transformation_table = self.run_transformations(q)
 
             # Grab the intensities
-            I_of_omega[:, idx] = np.array(transformation_table.col(f'I_{direction}{direction}')[:last_idx])
+            # Normalize them so we can compare them
+            I_of_omega[:, idx] = self.normalize_intensity(np.array(transformation_table.col(f'I_{direction}{direction}')[:last_idx]))
 
         # Flip the array, so it's the right way around.
         I_of_omega = np.flipud(I_of_omega)
 
         # Construct the plot
         plt.figure(figsize=(10, 9), tight_layout=True)
-        extent = [q_vectors[0][direction_number], q_vectors[-1][direction_number], hbar_omega[1, 0], hbar_omega[-1, 0]]
+        extent = [sum(q_vectors[0]), sum(q_vectors[-1]), hbar_omega[1, 0], hbar_omega[-1, 0]]
         im = plt.imshow(I_of_omega, extent=extent, interpolation='nearest')
         ax = plt.gca()
         ax.set_aspect(abs(extent[1] - extent[0]) / abs(extent[3] - extent[2]))
@@ -473,6 +466,26 @@ class BaseSimulation(object):
         # Cleanup
         for f in frames:
             f.close()
+
+    def plot_components_individually(self, atomId, filename):
+        fig, ax = plt.subplots()
+
+        positions = np.array([
+            self.datatables[f'p{atomId}'].cols.pos_x,
+            self.datatables[f'p{atomId}'].cols.pos_y,
+            self.datatables[f'p{atomId}'].cols.pos_z
+        ])
+        t = np.array(range(len(positions[0]))) * self.options['dt']
+
+        ax.plot(t, positions[0], label='$\\alpha = x$')
+        ax.plot(t, positions[1], label='$\\alpha = y$')
+        ax.plot(t, positions[2], label='$\\alpha = z$')
+
+        plt.xlabel('$t [s]$')
+        plt.ylabel('$S_' + atomId + '^{\\alpha}$')
+        plt.legend()
+
+        plt.savefig(filename, bbox_inches='tight', dpi=300)
 
     def plot_positions_xy(self, filename):
         fig, ax = plt.subplots()
@@ -616,81 +629,6 @@ class BaseSimulation(object):
             plt.xlabel('Frequency [Hz]')
             plt.ylabel('Intensity [A.U.]')
             plt.savefig(filename.format(direction), bbox_inches='tight', dpi=300)
-
-    def plot_qxx_vs_qyy(self, filename):
-        for key, value in self.transformtables.items():
-            print(key)
-
-    def plot_scattering_cross_section(self, filename):
-        cmap = plt.get_cmap('PiYG')
-
-        for direction in ['xx', 'yy', 'zz']:
-            x = []
-            y = []
-            z = []
-            for key, value in self.transformtables.items():
-                res = scattering_regex.findall(key)
-                if len(res) > 0:  # There should be max 1
-                    q_x = float('{}.{}'.format(res[0][0], res[0][1]))
-                    q_y = float('{}.{}'.format(res[0][2], res[0][3]))
-                    q_z = float('{}.{}'.format(res[0][4], res[0][5]))
-
-                    # Calculate the magnitude of the scattering vector
-                    x.append(np.sqrt(q_x ** 2 + q_y ** 2 + q_z ** 2))
-
-                    # Create energies array, should be constant across all qs
-                    if len(y) < 1:
-                        y = value.cols.energy
-
-                    # Append intensities for this combo of scattering vector and energies
-                    z.append(value.cols._f_col('I_{}'.format(direction)))
-
-            x = np.array(x)
-            y = np.array(y)
-            z = np.array(z)
-
-            # print('x', x)
-            # print('y', y)
-            # print('z', z)
-
-            # print(z)
-
-            # print(x.shape)
-            # print(y.shape)
-            # print(z.shape)
-
-            # z_min, z_max = -np.abs(z).max(), np.abs(z).max()
-            # fig, ax = plt.subplots()
-            # c = ax.pcolorfast(x, y, z, cmap='RdBu', vmin=z_min, vmax=z_max)
-            # ax.set_title('pcolorfast')
-            # fig.colorbar(c, ax=ax)
-
-            minimum_E = 0
-            maximum_E = 0.6
-            cut = 22
-
-            fig, ax = plt.subplots()
-            im = plt.imshow(np.transpose(np.log10(z)), aspect='auto', interpolation='none')
-            im.set_cmap('nipy_spectral')
-            cbar = plt.colorbar(im, orientation="vertical")
-            cbar.set_label(r'log(Intensity) [a.u.]', fontsize=20)
-            # c = ax.pcolormesh(x, y, np.transpose(z))
-            # plt.xlim(0, 12.5)
-            # plt.ylim(0, 0.6)
-            # fig.colorbar(c, ax=ax)
-
-            plt.savefig(filename.format(direction), bbox_inches='tight', dpi=300)
-
-            # z = z[:-1, :-1]
-            # levels = MaxNLocator(nbins=15).tick_values(z.min(), z.max())
-            # norm = BoundaryNorm(levels, ncolors=cmap.N, clip=True)
-
-            # fig, ax = plt.subplots()
-
-            # im = ax.pcolormesh(x, y, z, cmap=cmap, norm=norm)
-            # fig.colorbar(im, ax=ax)
-
-            # plt.savefig(filename.format(direction), bbox_inches='tight', dpi=300)
 
     def close(self):
         # Close the datafile
