@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import unittest
 from SimulationBaseClass import BaseSimulation
 import tempfile
@@ -46,7 +48,7 @@ class TwoSpinTest(unittest.TestCase):
             self.sim.particles.atoms[1].set_position(theta2, phi2)
 
             # Next run the simulation
-            self.sim.run_simulation(2 ** 24)
+            self.sim.run_simulation(2 ** 19)
 
             # Run the transformation
             self.sim.run_transformations(np.array([0, 0, 0]))
