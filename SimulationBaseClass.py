@@ -3,7 +3,10 @@
 
 import matplotlib
 
-matplotlib.use('Qt5Agg')
+try:
+    matplotlib.use('Qt5Agg')
+except:
+    matplotlib.use('Agg')
 # matplotlib.rcParams['agg.path.chunksize'] = 1000
 
 from Particles import handle_molecule_from_file, handle_molecule_from_ase

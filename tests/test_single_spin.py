@@ -37,10 +37,10 @@ class SingleSpinTest(unittest.TestCase):
         # Configure the simulation
         self.sim.options['simulation_name'] = 'TestSingleSpin'
         self.sim.options['input_file'] = 'tests/molecules/gd_ion.pdb'
-        self.sim.options['transform_file'] = self.tmpdir + '/transforms.h5'
+        self.sim.options['transform_file'] = self.tmpdir + '/transforms_n.h5'
         self.sim.options['debug'] = True
         self.sim.options['spin'] = 4
-        self.sim.options['J'] = 0 # No interaction, just B-field
+        self.sim.options['J'] = 12 # No interaction, just B-field
 
         # Set dt using estimates from calculations.
         self.sim.options['dt'] = dt
@@ -55,15 +55,17 @@ class SingleSpinTest(unittest.TestCase):
 
     def test_temperature(self):
         B_fields = [
-            [0., 0., 10.],
-            [0., 0., 50.],
-            [0., 0., 100.]
+            [0., 0., 0.031],
+            # [0., 0., 50.],
+            # [0., 0., 100.]
         ]
 
         # Set the damping
-        self.sim.options['l'] = l = 1e-2
-        self.sim.options['dt'] = 1e-14
-        self.sim.options['integrator'] = 'RK4'
+        self.sim.options['l'] = l = 2e-4
+        self.sim.options['dt'] = 1e-12
+        self.sim.options['integrator'] = 'euler'
+
+        plt.close("all")
 
         for B in B_fields:
             # Reset any old results
@@ -82,7 +84,7 @@ class SingleSpinTest(unittest.TestCase):
 
             # Get temperatures in the range 0K to 1000K, in 20 steps
             temperatures = (np.array(range(3)) + 1) * 1000 / 20
-            temperatures = [5, 50, 500]
+            temperatures = [10, 100, 100000]
 
             # Iterate over the temperatures
             for T in temperatures:
@@ -93,7 +95,7 @@ class SingleSpinTest(unittest.TestCase):
                 self.sim.particles.atoms[0].set_position(theta, phi)
 
                 # Setup the filename
-                self.sim.options['data_file'] = f'{self.tmpdir}/data_ad_bs_3_T{T}_B{B[2]}_l{l}.h5'
+                self.sim.options['data_file'] = f'{self.tmpdir}/data_euler_T{T}_B{B[2]}{B[1]}_l{l}_n.h5'
 
                 # Inform the user of whats going on
                 print(self.sim.options['data_file'])
@@ -106,14 +108,16 @@ class SingleSpinTest(unittest.TestCase):
                 magn.append(np.mean(table.cols.pos_z[-1000:]) / (self.sim.options['spin']))
 
                 # plt.plot(table.cols.pos_x)
-                # plt.plot(table.cols.pos_y)
-                plt.plot(table.cols.pos_z)
+                plt.plot(table.cols.pos_x, label=f'x row with T={T}, and B={np.linalg.norm(B)}')
+                # plt.title()
+                # plt.plot(table.cols.pos_z)
                 # plt.show()
 
             # Plot the magnetization as a function of temperature
             # plt.plot(temperatures, magn, '.')
 
         # Show the plots
+        plt.legend()
         plt.show()
 
         self.sim.options['dt'] = self.sim.options['dt'] / 20
@@ -133,7 +137,7 @@ class SingleSpinTest(unittest.TestCase):
         self.sim.options['T'] = 0
 
         # Set the filename
-        self.sim.options['data_file'] = self.tmpdir + '/data.h5'
+        self.sim.options['data_file'] = self.tmpdir + '/data_n.h5'
 
         # Start by running the sim
         self.sim.run_simulation(self.N)
@@ -149,7 +153,7 @@ class SingleSpinTest(unittest.TestCase):
         max_intensity_energy = table.cols.energy[np.argmax(table.cols.I_xx)]
 
         # Check that we see a peak right where we expect from Larmor precession.
-        self.assertAlmostEqual(self.expected_energy, max_intensity_energy, places=3)
+        self.assertAlmostEqual(self.expected_energy, max_intensity_energy, places=2)
 
 
 if __name__ == '__main__':
