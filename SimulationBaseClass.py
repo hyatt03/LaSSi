@@ -3,7 +3,10 @@
 
 import matplotlib
 
-matplotlib.use('Qt5Agg')
+try:
+    matplotlib.use('Qt5Agg')
+except:
+    matplotlib.use('Agg')
 # matplotlib.rcParams['agg.path.chunksize'] = 1000
 
 from Particles import handle_molecule_from_file, handle_molecule_from_ase
@@ -21,6 +24,7 @@ import hashlib
 import re
 import tempfile
 import multiprocessing
+import copy
 
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D  # Not directly used, but required to use 3d projection
@@ -100,7 +104,7 @@ class BaseSimulation(object):
     particles = None
 
     def __init__(self):
-        pass
+        self.options = copy.deepcopy(self.options)
 
     def load_particles(self, molecule=None):
         if molecule is not None:

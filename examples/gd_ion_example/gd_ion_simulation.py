@@ -12,7 +12,6 @@ class GdIonSimulation(BaseSimulation):
         self.options['data_file'] = 'examples/gd_ion_example/data.h5' # Saves the data file
         self.options['transform_file'] = 'examples/gd_ion_example/transformed_data.h5' # Saves the transforms file
         self.options['spin'] = 7/2
-        self.options['l'] = 0
         self.options['dt'] = 1e-14
         self.options['J'] = 0 # We only have one atom
         self.options['l'] = 0 # No dampening
