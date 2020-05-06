@@ -25,6 +25,26 @@ class Particles(object):
         if self.options['debug']:
             print('Loaded crystall with shape {} and {} atoms'.format(self.shape, len(molecule)))
 
+        if options['anisotropy'] is not None:
+            try:
+                self.options['anisotropy'] = np.array(self.options['anisotropy']).reshape((len(molecule), 3))
+
+                # If we have a repeating molecule we copy the anisotropy
+                repeats = self.options['repeat_cells']
+                if repeats and len(repeats) > 0:
+                    repetitions = 0
+                    for repeat in repeats:
+                        repetitions += repeat
+
+                    aniso = []
+                    for i in range(repetitions):
+                        aniso.append(np.copy(self.options['anisotropy']))
+
+                    self.options['anisotropy'] = np.array(aniso).reshape((repetitions * len(molecule), 3))
+            except:
+                raise ValueError('The length of anisotropy must equal the size of a single ' +
+                                 'unit cell and it must have 3 coordinates per entry')
+
         molecule = self.repeat_molecule(molecule)
 
         # Find dimensions of the molecule
