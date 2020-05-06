@@ -88,8 +88,9 @@ class BaseSimulation(object):
         'pbc': None,                          # Support for periodic boundary,
                                               # specify which directions should be periodic
         'debug': False,                       # Select if debugging output is wanted
-        'anneal_T' : None,
-        'integrator': 'ad_bs'
+        'anneal_T' : None,                    # Special temperature for annealling
+        'integrator': 'ad_bs',                # Select which integrator you want (ad_bs, ad3, rk4, rk2, euler)
+        'anisotropy': None                    # Specify anisotropy
     }
 
     datafile = None
