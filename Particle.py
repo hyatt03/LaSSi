@@ -8,6 +8,7 @@ import math
 from math import sin, cos
 from utils import dot, to_sph, to_cart
 
+# Adams-Bashforth integration constants
 ab = [1901 / 720, 2774 / 720, 2616 / 720, 1274 / 720, 251 / 720]
 
 
@@ -154,23 +155,33 @@ class Particle(object):
         # Grab the constants
         o, c = self.options, self.constants
         theta, phi = self.theta, self.phi
+        b_mag, b_theta, b_phi = math.fabs(b_rand[0]), b_rand[1], b_rand[2]
 
         # Gradually increase steps in the Adams Bashforth method
         if self.sphi4 is None:
-            d_stheta, d_sphi = self.first_ad_bs_step(theta, phi, b_rand)
+            d_stheta, d_sphi = self.first_ad_bs_step(theta, phi, None)
             d_ftheta, d_fphi = d_stheta, d_sphi
         elif self.sphi3 is None:
-            d_stheta, d_sphi, d_ftheta, d_fphi = self.second_ad_bs_step(theta, phi, b_rand)
+            d_stheta, d_sphi, d_ftheta, d_fphi = self.second_ad_bs_step(theta, phi, None)
         else:
-            d_stheta, d_sphi, d_ftheta, d_fphi = self.third_ad_bs_step(theta, phi, b_rand)
+            d_stheta, d_sphi, d_ftheta, d_fphi = self.third_ad_bs_step(theta, phi, None)
 
         # Move the values along so we keep continuing
         self.stheta4, self.stheta3, self.stheta2, self.stheta1 = d_ftheta, self.stheta4, self.stheta3, self.stheta2
         self.sphi4, self.sphi3, self.sphi2, self.sphi1 = d_fphi, self.sphi4, self.sphi3, self.sphi2
 
+        # Calculate the random energy added
+        # This is based on temperature
+        d_spin_rand_theta = (-math.sin(b_theta) * math.sin(b_phi) * math.cos(phi) +
+                             math.sin(b_theta) * math.cos(b_phi) * math.sin(phi)) * c['gamma'] * b_mag
+
+        d_spin_rand_phi = ((math.sin(phi) * math.sin(b_theta) * math.sin(b_phi) +
+                            math.sin(b_theta) * math.cos(b_phi) * math.cos(phi)) * math.cos(theta) -
+                           math.cos(b_theta) * math.sin(theta)) * c['gamma'] * b_mag / math.sin(theta)
+
         # Take the step and calculate the final position
-        theta += d_stheta * o['dt']
-        phi += d_sphi * o['dt']
+        theta += d_stheta * o['dt'] + d_spin_rand_theta
+        phi += d_sphi * o['dt'] + d_spin_rand_phi
 
         # Save the data to the atom
         p = self.set_position(theta, phi)
@@ -183,27 +194,38 @@ class Particle(object):
         # Grab the constants
         o, c = self.options, self.constants
         theta, phi = self.theta, self.phi
+        b_mag, b_theta, b_phi = math.fabs(b_rand[0]), b_rand[1], b_rand[2]
 
         # Gradually increase steps in the Adams Bashforth method
         if self.sphi4 is None:
-            d_stheta, d_sphi = self.first_ad_bs_step(theta, phi, b_rand)
+            d_stheta, d_sphi = self.first_ad_bs_step(theta, phi, None)
             d_ftheta, d_fphi = d_stheta, d_sphi
         elif self.sphi3 is None:
-            d_stheta, d_sphi, d_ftheta, d_fphi = self.second_ad_bs_step(theta, phi, b_rand)
+            d_stheta, d_sphi, d_ftheta, d_fphi = self.second_ad_bs_step(theta, phi, None)
         elif self.sphi2 is None:
-            d_stheta, d_sphi, d_ftheta, d_fphi = self.third_ad_bs_step(theta, phi, b_rand)
+            d_stheta, d_sphi, d_ftheta, d_fphi = self.third_ad_bs_step(theta, phi, None)
         elif self.sphi1 is None:
-            d_stheta, d_sphi, d_ftheta, d_fphi = self.fourth_ad_bs_step(theta, phi, b_rand)
+            d_stheta, d_sphi, d_ftheta, d_fphi = self.fourth_ad_bs_step(theta, phi, None)
         else:
-            d_stheta, d_sphi, d_ftheta, d_fphi = self.fifth_ad_bs_step(theta, phi, b_rand)
+            d_stheta, d_sphi, d_ftheta, d_fphi = self.fifth_ad_bs_step(theta, phi, None)
 
         # Move the values along so we keep continuing
         self.stheta4, self.stheta3, self.stheta2, self.stheta1 = d_ftheta, self.stheta4, self.stheta3, self.stheta2
         self.sphi4, self.sphi3, self.sphi2, self.sphi1 = d_fphi, self.sphi4, self.sphi3, self.sphi2
 
+        # Calculate the random energy added
+        # This is based on temperature
+        d_spin_rand_theta = (-math.sin(b_theta) * math.sin(b_phi) * math.cos(phi) +
+                             math.sin(b_theta) * math.cos(b_phi) * math.sin(phi)) * c['gamma'] * b_mag
+
+        d_spin_rand_phi = ((math.sin(phi) * math.sin(b_theta) * math.sin(b_phi) +
+                            math.sin(b_theta) * math.cos(b_phi) * math.cos(phi)) * math.cos(theta) -
+                           math.cos(b_theta) * math.sin(theta)) * c['gamma'] * b_mag / math.sin(theta)
+
+
         # Take the step and calculate the final position
-        theta += d_stheta * o['dt']
-        phi += d_sphi * o['dt']
+        theta += d_stheta * o['dt'] + d_spin_rand_theta
+        phi += d_sphi * o['dt'] + d_spin_rand_phi
 
         # Save the data to the atom
         p = self.set_position(theta, phi)

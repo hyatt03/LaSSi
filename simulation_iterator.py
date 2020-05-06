@@ -7,7 +7,7 @@ import random
 
 def simulation_iterator(options, constants, particles, iterations, tables, i_0=0):
     o, c = options, constants
-    sigma = math.sqrt(2. * o['l'] * c['k_b'] * o['T'] * c['hbar'] /
+    sigma = math.sqrt(2. * o['l'] * c['k_b'] * o['T'] * c['hbar'] * o['dt'] /
                       ((c['g'] * c['mu_b']) ** 2. * o['spin']))
 
     # Begin simulation
