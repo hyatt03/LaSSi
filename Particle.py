@@ -60,11 +60,12 @@ class Particle(object):
         self.B_eff = np.copy(o['B'])
 
         # Grab the anisotropic field for this specific site
-        B_anisotropic = np.copy(self.options['anisotropy'][self.id, :])
+        if self.options['anisotropy'] is not None:
+            B_anisotropic = np.copy(self.options['anisotropy'][self.id, :])
 
-        if o['debug']:
-            print(f'particle at {self.lattice_position[0]}, {self.lattice_position[1]}, {self.lattice_position[2]}',
-                  f'has B_anisotropic = {B_anisotropic}')
+            if o['debug']:
+                print(f'particle at {self.lattice_position[0]}, {self.lattice_position[1]}, {self.lattice_position[2]}',
+                      f'has B_anisotropic = {B_anisotropic}')
 
         # Iterate over the neighbours to find the effective B field
         for item in self.neighbours:

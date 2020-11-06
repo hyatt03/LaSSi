@@ -1,14 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import matplotlib
-
-try:
-    matplotlib.use('Qt5Agg')
-except:
-    matplotlib.use('Agg')
-# matplotlib.rcParams['agg.path.chunksize'] = 1000
-
 from Particles import handle_molecule_from_file, handle_molecule_from_ase
 from annealing import anneal_particles
 from simulation_iterator import simulation_iterator
@@ -128,13 +120,7 @@ class BaseSimulation(object):
     def run_anneal(self, steps):
         anneal_particles(self.options, self.constants, self.particles, steps)
 
-    def run_simulation(self, iterations):
-        if self.particles is None:
-            raise ValueError('particles is not defined, please run load_particles first')
-
-        if self.options['data_file'] is None:
-            raise ValueError('Need data_file option in order to run a simulation')
-
+    def open_datafile(self):
         d_path = Path(self.options['data_file'])
         datatitle = '{}_data'.format(self.options['simulation_name'])
 
@@ -149,13 +135,6 @@ class BaseSimulation(object):
             # Load the data
             for table in self.datafile.root.timeseries:
                 self.datatables[table.name] = table
-
-            # Count the number of rows
-            i_0 = self.datafile.root.timeseries.p0.nrows
-
-            # We want to keep going if the number of rows is less than the number of iterations
-            if i_0 < iterations:
-                simulation_iterator(self.options, self.constants, self.particles, iterations, self.datatables, i_0)
 
         else:
             # Create the path
@@ -174,8 +153,26 @@ class BaseSimulation(object):
                 self.datatables[tablename] = self.datafile.create_table(ts, tablename, TimeSeriesDescriptor,
                                                                         tabledescription)
 
-            # Start the simulation
-            simulation_iterator(self.options, self.constants, self.particles, iterations, self.datatables)
+    def check_sim_can_start(self):
+        if self.particles is None:
+            raise ValueError('particles is not defined, please run load_particles first')
+
+        if self.options['data_file'] is None:
+            raise ValueError('Need data_file option in order to run a simulation')
+
+    def run_simulation(self, iterations):
+        # Check if the sim is ready to start
+        self.check_sim_can_start()
+
+        # Open the datafile first
+        self.open_datafile()
+
+        # Count the number of rows
+        i_0 = self.datafile.root.timeseries.p0.nrows
+
+        # We want to keep going if the number of rows is less than the number of iterations
+        if i_0 < iterations:
+            simulation_iterator(self.options, self.constants, self.particles, iterations, self.datatables, i_0)
 
     # Normalizes numpy array to values between 0 and 1
     def normalize_intensity(self, I):
