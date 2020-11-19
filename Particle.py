@@ -54,7 +54,7 @@ class Particle(object):
         return self.pos
 
     # Calculate the effective B field for this atom from it's nearest neighbours
-    def combine_neighbours(self, neighbours): #pos=[0,0,0]
+    def combine_neighbours(self, neighbours): 
         o = self.options
         # We start with a copy of the external field
         self.B_eff = np.copy(o['B']) 
@@ -99,9 +99,9 @@ class Particle(object):
         stheta_cphi = stheta * cphi
 
         # Evaluate the difference in theta
-        d_theta = c['gamma'] * ((-b * sin(u) * sin(v) + B[0] * o['l'] * cos(theta) - B[1]) * cos(phi)
-                                + (b * sin(u) * cos(v) + B[1] * o['l'] * cos(theta) + B[0]) * sin(phi)
-                                - B[2] * sin(theta) * o['l'])
+        d_theta = stheta * c['gamma'] * sin(theta) * ((-b * sin(u) * sin(v) + B[0] * o['l'] * cos(theta) - B[1]) * cos(phi)
+                                               + (b * sin(u) * cos(v) + B[1] * o['l'] * cos(theta) + B[0]) * sin(phi)
+                                               - B[2] * sin(theta) * o['l'])
 
         # Evaluate the difference in phi
         d_phi = c['gamma'] * stheta_cphi * (
