@@ -24,10 +24,10 @@ class Particles(object):
 
         if self.options['debug']:
             print('Loaded crystall with shape {} and {} atoms'.format(self.shape, len(molecule)))
-
-        if options['anisotropy'] is not None:
+            
+        if options['anisotropy'] is not None: 
             try:
-                self.options['anisotropy'] = np.array(self.options['anisotropy']).reshape((len(molecule), 3))
+                self.options['anisotropy'] = np.array(self.options['anisotropy']).reshape((len(molecule), 3, 3))
 
                 # If we have a repeating molecule we copy the anisotropy
                 repeats = self.options['repeat_cells']
@@ -40,18 +40,18 @@ class Particles(object):
                     for i in range(repetitions):
                         aniso.append(np.copy(self.options['anisotropy']))
 
-                    self.options['anisotropy'] = np.array(aniso).reshape((repetitions * len(molecule), 3))
+                    self.options['anisotropy'] = np.array(aniso).reshape((repetitions * len(molecule), 3, 3)) 
             except:
                 raise ValueError('The length of anisotropy must equal the size of a single ' +
-                                 'unit cell and it must have 3 coordinates per entry')
-
+                                 'unit cell and it must have a 3x3 matrix per entry')   
+        
         molecule = self.repeat_molecule(molecule)
 
         # Find dimensions of the molecule
         self.len_x, self.len_y, self.len_z = molecule.get_cell_lengths_and_angles()[:3]
         if all(molecule.get_cell_lengths_and_angles()[:3]) == 0.:
             self.len_x, self.len_y, self.len_z = self.find_cubic_size(molecule)
-
+        
         atoms = []
         for atom in molecule:
             if atom.symbol in options['magnetic_molecules']:
@@ -212,7 +212,7 @@ class Particles(object):
                 close_sides.append([-self.len_x, self.len_y, 0])
                 close_sides.append([self.len_x, -self.len_y, 0])
                 close_sides.append([-self.len_x, -self.len_y, 0])
-
+                
             # Diagonal periodic boundary conditions of y and z
             if self.options['pbc'][1] and self.options['pbc'][2]:
                 close_sides.append([0, self.len_y, self.len_z])

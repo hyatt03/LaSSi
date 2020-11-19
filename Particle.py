@@ -55,17 +55,18 @@ class Particle(object):
 
     # Calculate the effective B field for this atom from it's nearest neighbours
     def combine_neighbours(self, neighbours):
-        o, c = self.options, self.constants
+        o = self.options
         # We start with a copy of the external field
         self.B_eff = np.copy(o['B'])
 
-        # Grab the anisotropic field for this specific site
-        if self.options['anisotropy'] is not None:
-            B_anisotropic = np.copy(self.options['anisotropy'][self.id, :])
+        if o['anisotropy'] is not None:
+            # Grab the anisotropic field for this specific site
+            B_anisotropic = np.copy(o['anisotropy'][self.id, :, :])
 
-            if o['debug']:
-                print(f'particle at {self.lattice_position[0]}, {self.lattice_position[1]}, {self.lattice_position[2]}',
-                      f'has B_anisotropic = {B_anisotropic}')
+            # Multiply anisotropy field with spin position
+            B_anis = np.dot(B_anisotropic, self.current_position())
+            self.B_eff += -B_anis
+
 
         # Iterate over the neighbours to find the effective B field
         for item in self.neighbours:
@@ -180,12 +181,12 @@ class Particle(object):
 
         # Calculate the random energy added
         # This is based on temperature
-        d_spin_rand_theta = (-math.sin(b_theta) * math.sin(b_phi) * math.cos(phi) +
-                             math.sin(b_theta) * math.cos(b_phi) * math.sin(phi)) * c['gamma'] * b_mag
+        d_spin_rand_theta = (-sin(b_theta) * sin(b_phi) * cos(phi) +
+                             sin(b_theta) * cos(b_phi) * sin(phi)) * c['gamma'] * b_mag
 
-        d_spin_rand_phi = ((math.sin(phi) * math.sin(b_theta) * math.sin(b_phi) +
-                            math.sin(b_theta) * math.cos(b_phi) * math.cos(phi)) * math.cos(theta) -
-                           math.cos(b_theta) * math.sin(theta)) * c['gamma'] * b_mag / math.sin(theta)
+        d_spin_rand_phi = ((sin(phi) * sin(b_theta) * sin(b_phi) +
+                            sin(b_theta) * cos(b_phi) * cos(phi)) * cos(theta) -
+                           cos(b_theta) * sin(theta)) * c['gamma'] * b_mag / sin(theta)
 
         # Take the step and calculate the final position
         theta += d_stheta * o['dt'] + d_spin_rand_theta
@@ -223,13 +224,12 @@ class Particle(object):
 
         # Calculate the random energy added
         # This is based on temperature
-        d_spin_rand_theta = (-math.sin(b_theta) * math.sin(b_phi) * math.cos(phi) +
-                             math.sin(b_theta) * math.cos(b_phi) * math.sin(phi)) * c['gamma'] * b_mag
+        d_spin_rand_theta = (-sin(b_theta) * sin(b_phi) * cos(phi) +
+                             sin(b_theta) * cos(b_phi) * sin(phi)) * c['gamma'] * b_mag
 
-        d_spin_rand_phi = ((math.sin(phi) * math.sin(b_theta) * math.sin(b_phi) +
-                            math.sin(b_theta) * math.cos(b_phi) * math.cos(phi)) * math.cos(theta) -
-                           math.cos(b_theta) * math.sin(theta)) * c['gamma'] * b_mag / math.sin(theta)
-
+        d_spin_rand_phi = ((sin(phi) * sin(b_theta) * sin(b_phi) +
+                            sin(b_theta) * cos(b_phi) * cos(phi)) * cos(theta) -
+                           cos(b_theta) * sin(theta)) * c['gamma'] * b_mag / sin(theta)
 
         # Take the step and calculate the final position
         theta += d_stheta * o['dt'] + d_spin_rand_theta
@@ -259,12 +259,12 @@ class Particle(object):
 
         # Calculate the random energy added
         # This is based on temperature
-        d_spin_rand_theta = (-math.sin(b_theta) * math.sin(b_phi) * math.cos(phi) +
-                             math.sin(b_theta) * math.cos(b_phi) * math.sin(phi)) * c['gamma'] * b_mag * o['dt']
+        d_spin_rand_theta = (-sin(b_theta) * sin(b_phi) * cos(phi) +
+                             sin(b_theta) * cos(b_phi) * sin(phi)) * c['gamma'] * b_mag
 
-        d_spin_rand_phi = o['dt'] * ((math.sin(phi) * math.sin(b_theta) * math.sin(b_phi) +
-                                      math.sin(b_theta) * math.cos(b_phi) * math.cos(phi)) * math.cos(theta) -
-                                      math.cos(b_theta) * math.sin(theta)) * c['gamma'] * b_mag / math.sin(theta)
+        d_spin_rand_phi = ((sin(phi) * sin(b_theta) * sin(b_phi) +
+                            sin(b_theta) * cos(b_phi) * cos(phi)) * cos(theta) -
+                           cos(b_theta) * sin(theta)) * c['gamma'] * b_mag / sin(theta)
 
         # Calculate the final position
         theta += d_theta + d_spin_rand_theta
@@ -296,16 +296,16 @@ class Particle(object):
 
         # Calculate the random energy added
         # This is based on temperature
-        d_spin_rand_theta = (-math.sin(b_theta) * math.sin(b_phi) * math.cos(phi) +
-                             math.sin(b_theta) * math.cos(b_phi) * math.sin(phi)) * c['gamma'] * b_mag
+        d_spin_rand_theta = (-sin(b_theta) * sin(b_phi) * cos(phi) +
+                             sin(b_theta) * cos(b_phi) * sin(phi)) * c['gamma'] * b_mag
 
-        d_spin_rand_phi = ((math.sin(phi) * math.sin(b_theta) * math.sin(b_phi) +
-                            math.sin(b_theta) * math.cos(b_phi) * math.cos(phi)) * math.cos(theta) -
-                           math.cos(b_theta) * math.sin(theta)) * c['gamma'] * b_mag / math.sin(theta)
+        d_spin_rand_phi = ((sin(phi) * sin(b_theta) * sin(b_phi) +
+                            sin(b_theta) * cos(b_phi) * cos(phi)) * cos(theta) -
+                           cos(b_theta) * sin(theta)) * c['gamma'] * b_mag / sin(theta)
 
         # Calculate the final position
-        theta += d_theta + d_spin_rand_theta * o['dt']
-        phi += d_phi + d_spin_rand_phi * o['dt']
+        theta += d_theta + d_spin_rand_theta
+        phi += d_phi + d_spin_rand_phi
 
         # Save the data to the atom
         p = self.set_position(theta, phi)
@@ -315,11 +315,23 @@ class Particle(object):
     def take_euler_step(self, b_rand):
         # Calculate function value
         theta, phi = self.theta, self.phi
-        d_stheta, d_sphi = self.calculate_function_value(theta, phi, b_rand)
+        d_stheta, d_sphi = self.calculate_function_value(theta, phi, b_rand=None)
+
+        b_mag, b_theta, b_phi = b_rand
+        c = self.constants
+        # Calculate the random energy added
+        # This is based on temperature
+        d_spin_rand_theta = (-sin(b_theta) * sin(b_phi) * cos(phi) +
+                             sin(b_theta) * cos(b_phi) * sin(phi)) * c['gamma'] * b_mag
+
+        d_spin_rand_phi = ((sin(phi) * sin(b_theta) * sin(b_phi) +
+                            sin(b_theta) * cos(b_phi) * cos(phi)) * cos(theta) -
+                           cos(b_theta) * sin(theta)) * c['gamma'] * b_mag / sin(theta)
+
 
         # Take the step and calculate the final position
-        theta += d_stheta * self.options['dt']
-        phi += d_sphi * self.options['dt']
+        theta += d_stheta * self.options['dt'] + d_spin_rand_theta
+        phi += d_sphi * self.options['dt'] + d_spin_rand_phi
 
         # Save the data to the atom
         p = self.set_position(theta, phi)
