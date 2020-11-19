@@ -11,3 +11,4 @@ profiles
 *.h5
 examples/**/*.png
 htmlcov
+.ipynb_checkpoints

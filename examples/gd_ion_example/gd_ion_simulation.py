@@ -1,8 +1,10 @@
 from SimulationBaseClass import BaseSimulation
+from MPISimulationBaseClass import MPIBaseSimulation
 import numpy as np
 
 
-class GdIonSimulation(BaseSimulation):
+# class GdIonSimulation(BaseSimulation):
+class GdIonSimulation(MPIBaseSimulation):
     def __init__(self):
         super().__init__() # Run init of superclass, IMPORTANT!
 
@@ -17,6 +19,7 @@ class GdIonSimulation(BaseSimulation):
         self.options['l'] = 0 # No dampening
         self.options['T'] = 0 # Zero temperature
         self.options['B'] = np.array([0, 0, 1]) # 1 tesla in z direction
+        self.options['debug'] = True
 
 
 if __name__ == '__main__':
@@ -31,21 +34,21 @@ if __name__ == '__main__':
     # Run the transformations on a range of scattering vectors
     for q_size in np.arange(0., 0.1, 0.1):
         q = q_size * np.array([0, 0, 1])
-        sim.run_transformations(q)
+        # sim.run_transformations(q)
 
     # Plot results
     # Spins
-    sim.plot_spins_xy('examples/gd_ion_example/spin_xy.png')
-    sim.plot_spins_xyz('examples/gd_ion_example/spin_xyz.png')
+    # sim.plot_spins_xy('examples/gd_ion_example/spin_xy.png')
+    # sim.plot_spins_xyz('examples/gd_ion_example/spin_xyz.png')
 
     # Energies
-    sim.plot_energies('examples/gd_ion_example/energies_{}.png', [0, 0.2])
+    # sim.plot_energies('examples/gd_ion_example/energies_{}.png', [0, 0.2])
 
     # Frequencies
-    sim.plot_frequencies('examples/gd_ion_example/frequencies_{}.png', [0, 1e11])
+    # sim.plot_frequencies('examples/gd_ion_example/frequencies_{}.png', [0, 1e11])
 
     # Scattering cross section
-    sim.plot_scattering_cross_section('examples/gd_ion_example/cross_section_{}.png')
+    # sim.plot_scattering_cross_section('examples/gd_ion_example/cross_section_{}.png')
 
     # Close the simulation
     sim.close()
