@@ -10,5 +10,5 @@ install:
 - cmd: "%PIP% install tables numpy scipy matplotlib ase pandas"
 
 test_script:
-- cmd: "%PYTHON% run tests\\test_basic.py"
-- cmd: "%PYTHON% run tests\\test_single_spin.py"
+- cmd: "%PYTHON% tests\\test_basic.py"
+- cmd: "%PYTHON% tests\\test_single_spin.py"
