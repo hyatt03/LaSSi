@@ -1,6 +1,6 @@
 environment:
   matrix:
-  - PYTHON: C:\Python38-x64
+  - PYTHON: C:\Python38-x64\python
     PIP: C:\Python38-x64\Scripts\pip
     TWINE: C:\Python38-x64\Scripts\twine
 
@@ -8,8 +8,8 @@ build: off
 
 install:
 - cmd: "%PIP% install pipenv"
-- cmd: "python --version"
-- cmd: "python -m pipenv install"
+- cmd: "%PYTHON% --version"
+- cmd: "%PYTHON% -m pipenv install"
 
 test_script:
 - cmd: "%PYTHON% -m pipenv run tests/test_basic.py"
