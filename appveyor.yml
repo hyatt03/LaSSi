@@ -1,13 +1,15 @@
 environment:
   matrix:
-  - TOXENV: py37
+  - PYTHON: C:\Python38-x64
+    PIP: C:\Python38-x64\Scripts\pip
+    TWINE: C:\Python38-x64\Scripts\twine
 
 build: off
 
 install:
-- pip install pipenv
-- pipenv install
+- %PIP% install pipenv
+- %PYTHON% -m pipenv install
 
 test_script:
-- pipenv run tests/test_basic.py
-- pipenv run tests/test_single_spin.py
+- %PYTHON% -m pipenv run tests/test_basic.py
+- %PYTHON% -m pipenv run tests/test_single_spin.py
