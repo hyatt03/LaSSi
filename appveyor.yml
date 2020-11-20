@@ -11,4 +11,3 @@ install:
 
 test_script:
 - cmd: "%PYTHON% tests\\test_basic.py"
-- cmd: "%PYTHON% tests\\test_single_spin.py"
