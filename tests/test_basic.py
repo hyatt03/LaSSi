@@ -81,7 +81,7 @@ class BasicFunctionalityTest(unittest.TestCase):
 
         # Check the data was saved
         self.assertEqual(firstkey, 'p0')
-        self.assertEqual(len(self.sim.datatables[firstkey]), N_iterations)
+        self.assertEqual(len(self.sim.datatables[firstkey]), N_iterations + 1)
 
     def test_transformations(self):
         # Initialize the simulation, run it, and get initial states
