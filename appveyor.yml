@@ -5,8 +5,10 @@ environment:
 build: off
 
 install:
-- pip install tox pipenv
+- pip install pipenv
 - pipenv install
+- pipenv shell
 
 test_script:
-- tox
+- python tests/test_basic.py
+- python tests/test_single_spin.py
