@@ -7,9 +7,9 @@ environment:
 build: off
 
 install:
-- cmd: %PIP% install pipenv
-- cmd: %PYTHON% -m pipenv install
+- cmd: "%PIP% install pipenv"
+- cmd: "%PYTHON% -m pipenv install"
 
 test_script:
-- cmd: %PYTHON% -m pipenv run tests/test_basic.py
-- cmd: %PYTHON% -m pipenv run tests/test_single_spin.py
+- cmd: "%PYTHON% -m pipenv run tests/test_basic.py"
+- cmd: "%PYTHON% -m pipenv run tests/test_single_spin.py"
