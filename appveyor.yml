@@ -8,7 +8,8 @@ build: off
 
 install:
 - cmd: "%PIP% install pipenv"
-- cmd: "%PYTHON% -m pipenv install"
+- cmd: "python --version"
+- cmd: "python -m pipenv install"
 
 test_script:
 - cmd: "%PYTHON% -m pipenv run tests/test_basic.py"
