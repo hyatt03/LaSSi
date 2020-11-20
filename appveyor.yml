@@ -7,8 +7,7 @@ build: off
 install:
 - pip install pipenv
 - pipenv install
-- pipenv shell
 
 test_script:
-- python tests/test_basic.py
-- python tests/test_single_spin.py
+- pipenv run tests/test_basic.py
+- pipenv run tests/test_single_spin.py
