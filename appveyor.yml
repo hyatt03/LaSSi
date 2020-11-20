@@ -7,10 +7,8 @@ environment:
 build: off
 
 install:
-- cmd: "%PIP% install pipenv"
-- cmd: "rm -rf Pipfile.lock"
-- cmd: "%PYTHON% -m pipenv install"
+- cmd: "%PIP% install tables numpy scipy matplotlib ase pandas"
 
 test_script:
-- cmd: "%PYTHON% -m pipenv run tests\test_basic.py"
-- cmd: "%PYTHON% -m pipenv run tests\test_single_spin.py"
+- cmd: "%PYTHON% run tests\test_basic.py"
+- cmd: "%PYTHON% run tests\test_single_spin.py"
