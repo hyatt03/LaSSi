@@ -1,0 +1,12 @@
+environment:
+  matrix:
+  - TOXENV: py37
+
+build: off
+
+install:
+- pip install tox pipenv
+- pipenv install
+
+test_script:
+- tox
