@@ -65,7 +65,7 @@ class BasicFunctionalityTest(unittest.TestCase):
     def test_simulation(self):
         # Initialize the simulation and get initial states
         self.sim.load_particles()
-        N_iterations = 2**4
+        N_iterations = 2**5
         initial_position = self.sim.particles.atoms[0].pos.copy()
         self.assertDictEqual(self.sim.datatables, {})
 
@@ -81,7 +81,7 @@ class BasicFunctionalityTest(unittest.TestCase):
 
         # Check the data was saved
         self.assertEqual(firstkey, 'p0')
-        self.assertEqual(len(self.sim.datatables[firstkey]), N_iterations)
+        self.assertEqual(len(self.sim.datatables[firstkey]), N_iterations + 1)
 
     def test_transformations(self):
         # Initialize the simulation, run it, and get initial states

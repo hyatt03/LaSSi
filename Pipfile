@@ -13,10 +13,6 @@ matplotlib = "*"
 ase = "*"
 pillow = "*"
 pandas = "*"
-pyside2 = "*"
-jupyter = "*"
-jupyterlab = "*"
-ipyparallel = "*"
 
 [requires]
 python_version = "3"

@@ -1,0 +1,13 @@
+environment:
+  matrix:
+  - PYTHON: C:\Python38-x64\python
+    PIP: C:\Python38-x64\Scripts\pip
+    TWINE: C:\Python38-x64\Scripts\twine
+
+build: off
+
+install:
+- cmd: "%PIP% install tables numpy scipy matplotlib ase pandas"
+
+test_script:
+- cmd: "%PYTHON% tests\\test_basic.py"
