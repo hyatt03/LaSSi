@@ -3,8 +3,8 @@ from MPISimulationBaseClass import MPIBaseSimulation
 import numpy as np
 
 
-# class GdIonSimulation(BaseSimulation):
-class GdIonSimulation(MPIBaseSimulation):
+class GdIonSimulation(BaseSimulation):
+# class GdIonSimulation(MPIBaseSimulation):
     def __init__(self):
         super().__init__() # Run init of superclass, IMPORTANT!
 
@@ -32,9 +32,10 @@ if __name__ == '__main__':
     sim.run_simulation(1e5)
 
     # Run the transformations on a range of scattering vectors
-    for q_size in np.arange(0., 0.1, 0.1):
+    for q_size in np.arange(0., 0.1, 0.5):
+        print('runnning transform')
         q = q_size * np.array([0, 0, 1])
-        # sim.run_transformations(q)
+        sim.run_transformations(q)
 
     # Plot results
     # Spins
