@@ -67,7 +67,6 @@ class Particle(object):
             B_anis = np.dot(B_anisotropic, self.current_position())
             self.B_eff += -B_anis
 
-
         # Iterate over the neighbours to find the effective B field
         for item in self.neighbours:
             if item != self.id:

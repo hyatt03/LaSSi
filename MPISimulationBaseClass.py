@@ -46,8 +46,6 @@ class MPIBaseSimulation(BaseSimulation):
 
         return self.mpi_next_node
 
-
-
     def load_particles(self, molecule=None):
         # If we are the master node, we want to load the particles
         if self.is_master:
