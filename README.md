@@ -12,3 +12,7 @@ LaSSi works by integrating a classical approximation of the spin movements over 
 ## Examples
 
 Examples can be found in the examples folder.
+
+## Status of the project
+
+Currently LaSSi is very much a work in progress, we're currently working on scientific validation of the methods applied, as well as correcting any mistakes that may have occurred along the way. We aim to publish a PyPI package of the entire projekt so anybody can create and run simulations, but until then just check it out and have a look at the examples.
