@@ -5,6 +5,7 @@ Class that contains all the particles in the simulation.
 """
 
 from Particle import Particle
+from Particle_cart import Particle_cart 
 import pandas as pd
 import numpy as np
 import math
@@ -105,8 +106,13 @@ class Particles(object):
                     # Special case, only two atoms, just add the other atom.
                     closest_neighbour_indexes.append(distances[0][0])
 
-            self.atoms.append(Particle(id, atom, self.N_atoms, closest_neighbour_indexes, self.options, self.constants))
-
+            if self.options['coordinate_system'] == 'sph':
+                self.atoms.append(Particle(id, atom, self.N_atoms, closest_neighbour_indexes, self.options, self.constants))
+            elif self.options['coordinate_system'] == 'cart':
+                self.atoms.append(Particle_cart(id, atom, self.N_atoms, closest_neighbour_indexes, self.options, self.constants))
+            else:
+                raise ValueError('Invalid coordinate system, use sph or cart in simulation options')
+                
     def __iter__(self):
         return self
 
