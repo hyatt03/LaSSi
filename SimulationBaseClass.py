@@ -82,7 +82,8 @@ class BaseSimulation(object):
         'debug': False,                       # Select if debugging output is wanted
         'anneal_T' : None,                    # Special temperature for annealling
         'integrator': 'ad_bs',                # Select which integrator you want (ad_bs, ad3, rk4, rk2, euler)
-        'anisotropy': None                    # Specify anisotropy
+        'anisotropy': None,                   # Specify anisotropy
+        'coordinate_system': 'sph'            # Specify coordinate system (sph or cart)
     }
 
     datafile = None
